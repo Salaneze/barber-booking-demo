@@ -15,6 +15,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from bot.config import settings
 from bot.db.models import Booking, BookingStatus, Client, DayOff, Master, Service, utcnow
+from bot.plural import plural
 from bot.slots import free_slots, local_to_utc, utc_to_local
 
 
@@ -110,7 +111,8 @@ async def create_booking(session: AsyncSession, *, user_id: int, name: str, phon
     if replace_id:
         old = await _own_cancellable(session, replace_id, user_id, now)
     elif await active_count(session, user_id, now) >= settings.max_active_per_user:
-        raise BookingError(f"У вас уже {settings.max_active_per_user} записи вперёд. "
+        n = settings.max_active_per_user
+        raise BookingError(f"У вас уже {n} {plural(n, 'запись', 'записи', 'записей')} вперёд. "
                            "Чтобы записаться ещё, отмените одну из них в «Мои записи».")
 
     # Окно записи проверяем здесь: подделанная кнопка иначе бронирует на год вперёд

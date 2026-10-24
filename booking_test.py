@@ -21,6 +21,7 @@ from sqlalchemy import select  # noqa: E402
 from bot.db import repo  # noqa: E402
 from bot.db.base import engine, init_db, session_factory  # noqa: E402
 from bot.db.models import Booking, Master, Service  # noqa: E402
+from bot.plural import plural  # noqa: E402
 from bot.seed import seed_if_empty  # noqa: E402
 from bot.slots import free_slots, local_to_utc  # noqa: E402
 
@@ -35,6 +36,14 @@ def check(name, cond, extra=""):
     else:
         FAIL += 1
         print(f"FAIL {name} {extra}")
+
+
+def plural_forms():
+    # 11-14 — исключения, на которых наивное «по последней цифре» и ломается
+    got = {n: plural(n, "час", "часа", "часов") for n in (1, 2, 4, 5, 11, 12, 14, 21, 22, 25, 101, 111)}
+    want = {1: "час", 2: "часа", 4: "часа", 5: "часов", 11: "часов", 12: "часов", 14: "часов",
+            21: "час", 22: "часа", 25: "часов", 101: "час", 111: "часов"}
+    check("plural: час/часа/часов", got == want, str({k: v for k, v in got.items() if want[k] != v}))
 
 
 def slots_pure():
@@ -196,6 +205,7 @@ async def repo_tests():
 
 
 async def main():
+    plural_forms()
     slots_pure()
     await setup()
     await repo_tests()

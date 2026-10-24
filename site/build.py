@@ -20,6 +20,7 @@ os.environ.setdefault("BOT_TOKEN", "build")
 os.chdir(ROOT)
 
 from bot.config import settings  # noqa: E402
+from bot.plural import plural as word_for  # noqa: E402
 from bot.seed import MASTERS, SERVICES  # noqa: E402
 
 DAYS = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"]
@@ -32,14 +33,7 @@ def rub(n: int) -> str:
 
 
 def plural(n: int, one: str, few: str, many: str) -> str:
-    # Сроки берутся из настроек салона: «за 1 часа» на сайте выглядело бы как опечатка
-    if n % 10 == 1 and n % 100 != 11:
-        word = one
-    elif 2 <= n % 10 <= 4 and not 12 <= n % 100 <= 14:
-        word = few
-    else:
-        word = many
-    return f"{n}{NBSP}{word}"
+    return f"{n}{NBSP}{word_for(n, one, few, many)}"
 
 
 def service_url(bot: str, idx: int) -> str:

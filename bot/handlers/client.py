@@ -23,6 +23,7 @@ from bot.config import settings
 from bot.db import repo
 from bot.db.models import Booking, Master, Service, utcnow
 from bot.notify import notify_admins
+from bot.plural import plural
 from bot.text import booking_card, day_label, esc, hhmm, rub, when
 
 log = logging.getLogger(__name__)
@@ -181,7 +182,8 @@ async def days(cb: CallbackQuery, callback_data: Bk, session: AsyncSession) -> N
     open_ = await repo.open_days(session, svc, c.m, utcnow(), c.r or None)
     back = btn("« Назад", Bk(step="mst", s=c.s, r=c.r))
     if not open_:
-        return await edit(cb, f"На ближайшие {settings.days_ahead} дней свободного времени нет. "
+        n = settings.days_ahead
+        return await edit(cb, f"На ближайшие {n} {plural(n, 'день', 'дня', 'дней')} свободного времени нет. "
                               "Попробуйте другого мастера.", kb([back]))
     rows = chunks([btn(day_label(d), Bk(step="time", s=c.s, m=c.m, d=to_d(d), r=c.r)) for d in open_], 3)
     await edit(cb, f"<b>{esc(svc.title)}</b>\nВыберите день:", kb(*rows, [back]))
@@ -289,8 +291,9 @@ async def confirm(cb: CallbackQuery, callback_data: Bk, session: AsyncSession, b
                                          [btn("« В меню", "menu")]))
     await state.clear()
     head = "Запись перенесена" if c.r else "Вы записаны"
+    soon = settings.remind_soon_hours
     await edit(cb, f"✅ {head}!\n\n{booking_card(b)}\n\n{esc(settings.shop_address)}\n"
-                   f"Напомню за день и за {settings.remind_soon_hours} часа.")
+                   f"Напомню за день и за {soon} {plural(soon, 'час', 'часа', 'часов')}.")
     what = f"Перенос записи #{c.r} -> #{b.id}" if c.r else f"Новая запись #{b.id}"
     await notify_admins(bot, f"{what}\n\n{booking_card(b)}\nКлиент: {esc(b.client_name)}, {esc(b.phone)}")
 
