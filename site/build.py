@@ -108,7 +108,80 @@ def chat(shave: int) -> str:
     ])
 
 
-def build(bot: str, city: str) -> str:
+# Файл, подпись, мастер, номер услуги в SERVICES. Мастер должен эту услугу делать —
+# иначе подпись «у Даши» ведёт в бота, где Даши в списке нет
+CUTS = [
+    ("cut-fade", "Фейд", "Игорь", 0),
+    ("cut-classic", "Классика с пробором", "Артём", 0),
+    ("cut-buzz", "Под машинку", "Игорь", 1),
+    ("cut-long", "Длинные", "Даша", 0),
+]
+
+
+def schedule() -> str:
+    head = "".join(f'<th scope="col" data-d="{d}">{DAYS[d]}</th>' for d in range(7))
+    rows = []
+    for name, _, _, days, (h0, h1) in MASTERS:
+        cells = "".join(
+            f'<td data-d="{d}">{h0}–{h1}</td>' if d in days else f'<td data-d="{d}" class="off">выходной</td>'
+            for d in range(7))
+        rows.append(f'        <tr><th scope="row">{escape(name)}</th>{cells}</tr>')
+    return (f'      <table class="sched">\n        <thead><tr><td></td>{head}</tr></thead>\n'
+            f'        <tbody>\n' + "\n".join(rows) + '\n        </tbody>\n      </table>')
+
+
+def gallery(bot: str) -> str:
+    out = []
+    for i, (slug, title, master, svc) in enumerate(CUTS):
+        assert svc in next(m[2] for m in MASTERS if m[0] == master), f"{master} не делает {SERVICES[svc][0]}"
+        if not (SITE / "img" / f"{slug}-dots.jpg").exists():
+            continue
+        alt = f"{title}, работа мастера {master}"
+        out.append(
+            f'      <a class="cut" href="{service_url(bot, svc)}" data-reveal style="--i:{i}">\n'
+            f'        <span class="cut-img">'
+            f'<img src="img/{slug}-dots.jpg" alt="{escape(alt)}" width="800" height="1000" loading="lazy" decoding="async">'
+            f'<img class="cut-color" src="img/{slug}.jpg" alt="" width="800" height="1000" loading="lazy" decoding="async">'
+            f'</span>\n'
+            f'        <span class="cut-cap"><b>{escape(title)}</b><span>{escape(master)} · {escape(SERVICES[svc][0].lower())}</span></span>\n'
+            f'      </a>')
+    return "\n".join(out)
+
+
+def faq() -> list[tuple[str, str]]:
+    kids = [m[0] for m in MASTERS if any("детск" in SERVICES[i][0].lower() for i in m[2])]
+    no_tg = (f"Позвоните: {escape(settings.shop_phone)}. Но в боте видно живое свободное время, по телефону — нет."
+             if settings.shop_phone else
+             "Пока только через бота: он видит живое расписание мастеров, и занятое время не предложит.")
+    items = [
+        ("Нужно ли что-то устанавливать?", "Нет. Бот открывается в том Телеграме, что уже стоит в телефоне. Регистрации тоже нет — нужно только имя и номер."),
+        ("На сколько вперёд можно записаться?", f"На {plural(settings.days_ahead, 'день', 'дня', 'дней')}. Дальше мастера расписание ещё не открыли."),
+        ("Как перенести или отменить?", f"В том же чате, у своей записи. Не позже чем за {plural(settings.cancel_hours, 'час', 'часа', 'часов')} до визита — потом слот уже никто не займёт, и вопрос решает администратор."),
+        ("Напомните о записи?", f"Да, дважды: за сутки и за {plural(settings.remind_soon_hours, 'час', 'часа', 'часов')}."),
+        ("А без Телеграма?", no_tg),
+    ]
+    if kids:
+        items.append(("Детей стрижёте?", f"Да, детская стрижка — у мастера {escape(kids[0])}." if len(kids) == 1
+                      else f"Да, детская стрижка — у мастеров: {escape(', '.join(kids))}."))
+    return items
+
+
+def v2_values(bot: str) -> dict[str, str]:
+    q = "\n".join(
+        f'      <details>\n        <summary>{escape(a)}<span class="plus" aria-hidden="true"></span></summary>\n'
+        f'        <p>{b}</p>\n      </details>' for a, b in faq())
+    words = [t for t, _, _ in SERVICES] + ["Без звонков", "Запись в Телеграме"]
+    line = "".join(f"<span>{escape(w)}</span><i aria-hidden=\"true\"></i>" for w in words)
+    return {
+        "GALLERY": gallery(bot),
+        "SCHEDULE": schedule(),
+        "FAQ": q,
+        # Две одинаковые половины: лента сдвигается на −50% и шов не виден
+        "MARQUEE": f'<div class="marquee-track"><div>{line}</div><div aria-hidden="true">{line}</div></div>',
+    }
+
+
+def build(bot: str, city: str, template: str = "template.html") -> str:
     bot_url = f"https://t.me/{bot}"
     rows = []
     for i, (title, minutes, price) in enumerate(SERVICES):
@@ -154,11 +227,12 @@ def build(bot: str, city: str) -> str:
         "IMG_HERO": img("hero.jpg", "Кресло и зеркало в зале барбершопа", 1600, 900, eager=True),
         "IMG_SHAVE": img("detail-shave.jpg", "Королевское бритьё опасной бритвой", 1500, 1000),
     }
-    html = (SITE / "template.html").read_text(encoding="utf-8")
+    values.update(v2_values(bot))
+    html = (SITE / template).read_text(encoding="utf-8")
     html = re.sub(r"\{\{(\w+)\}\}", lambda mt: values[mt.group(1)], html)
     # Пометка строго после doctype: комментарий перед ним включает quirks-режим
     doctype, rest = html.split("\n", 1)
-    return f"{doctype}\n<!-- Собрано site/build.py из template.html и bot/seed.py — руками не править -->\n{rest}"
+    return f"{doctype}\n<!-- Собрано site/build.py из {template} и bot/seed.py — руками не править -->\n{rest}"
 
 
 def main() -> None:
@@ -166,9 +240,11 @@ def main() -> None:
     ap.add_argument("--bot", default="britvaa_demo_bot")
     ap.add_argument("--city", default="Москва")
     args = ap.parse_args()
-    out = SITE / "index.html"
-    out.write_text(build(args.bot, args.city), encoding="utf-8", newline="\n")
-    print(f"собрано: {out}")
+    # v2 живёт рядом с v1, пока не выбрали одну: данные общие, разметка своя
+    for tpl, name in (("template.html", "index.html"), ("template-v2.html", "v2.html")):
+        out = SITE / name
+        out.write_text(build(args.bot, args.city, tpl), encoding="utf-8", newline="\n")
+        print(f"собрано: {out}")
 
 
 if __name__ == "__main__":

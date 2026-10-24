@@ -13,6 +13,8 @@ WIDTH = {"hero": 2000, "detail-shave": 1600}
 
 def main() -> None:
     for src in sorted(IMG.glob("*.png")):
+        if src.stem.startswith("cut-"):
+            continue  # кадр 4:5 и растр к нему режет halftone.py
         im = Image.open(src).convert("RGB")
         w = WIDTH.get(src.stem, 900)
         if im.width > w:
