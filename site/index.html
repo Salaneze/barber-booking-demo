@@ -1,149 +1,204 @@
 <!doctype html>
-<!-- Собрано site/build.py из template.html и bot/seed.py — руками не править -->
+<!-- Собрано site/build.py из template-v2.html и bot/seed.py — руками не править -->
 <html lang="ru">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Бритва — барбершоп, запись в Телеграме</title>
 <meta name="description" content="Мужские стрижки, борода и королевское бритьё. Три мастера, запись в Телеграме за минуту.">
-<meta name="theme-color" content="#141312">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23141312'/%3E%3Ctext x='16' y='24' font-family='Georgia,serif' font-size='22' font-weight='700' fill='%23c9a35b' text-anchor='middle'%3E%D0%91%3C/text%3E%3C/svg%3E">
+<meta name="theme-color" content="#efe7d8">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23efe7d8'/%3E%3Ctext x='16' y='25' font-family='Impact,sans-serif' font-size='24' fill='%23c23b22' text-anchor='middle'%3E%D0%91%3C/text%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600&family=Old+Standard+TT:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600&family=Old+Standard+TT:ital,wght@1,400&family=Oswald:wght@500;700&display=swap" rel="stylesheet">
 <style>
 :root {
-  --bg: #141312;
-  --surface: #1c1a18;
-  --text: #ece6dc;
-  --muted: #a39b8f;
-  --brass: #c9a35b;
-  --line: rgb(236 230 220 / .12);
-  --serif: "Old Standard TT", "Times New Roman", serif;
+  --paper: #efe7d8;
+  --paper-2: #e6dccb;
+  --ink: #161412;
+  --ink-2: #4a443c;
+  --cinnabar: #c23b22;
+  --on-ink: #d9d0c1;
+  --line: rgb(22 20 18 / .16);
+  --line-ink: rgb(239 231 216 / .16);
+  --display: "Oswald", "Arial Narrow", sans-serif;
+  --italic: "Old Standard TT", "Times New Roman", serif;
   --sans: "Golos Text", system-ui, sans-serif;
   --gutter: clamp(16px, 4vw, 48px);
-  --wrap: 1180px;
+  --wrap: 1240px;
   --section: 128px;
   --ease: cubic-bezier(.2, .7, .2, 1);
-  color-scheme: dark;
+  color-scheme: light;
+  interpolate-size: allow-keywords;
 }
 * { box-sizing: border-box; }
 html { scroll-behavior: smooth; }
 body {
-  margin: 0;
-  background: var(--bg);
-  color: var(--text);
+  margin: 0; overflow-x: clip;
+  background: var(--paper); color: var(--ink);
   font: 400 17px/1.65 var(--sans);
   font-variant-numeric: tabular-nums;
   -webkit-font-smoothing: antialiased;
 }
 img { display: block; max-width: 100%; height: auto; }
 a { color: inherit; }
-:focus-visible { outline: 2px solid var(--brass); outline-offset: 3px; }
+:focus-visible { outline: 2px solid var(--cinnabar); outline-offset: 3px; }
 
 .wrap { width: min(100% - 2 * var(--gutter), var(--wrap)); margin-inline: auto; }
-h1, h2, h3 { font-family: var(--serif); font-weight: 400; margin: 0; letter-spacing: -.01em; }
-h2 { font-size: clamp(36px, 5vw, 56px); line-height: 1.1; }
-.kicker {
-  font-size: 13px; letter-spacing: .14em; text-transform: uppercase;
-  color: var(--muted); margin: 0 0 16px;
+h1, h2, h3 { margin: 0; font-weight: 700; }
+h2 {
+  font: 700 clamp(44px, 7vw, 104px)/.92 var(--display);
+  text-transform: uppercase; letter-spacing: -.01em;
 }
-.blade { display: block; width: 48px; height: 1px; background: var(--brass); border: 0; margin: 0 0 24px; }
-.lead { color: var(--muted); max-width: 52ch; margin: 24px 0 0; }
+/* Курсив старой цирюльни — единственное место, где сериф: вставка в гротеск */
+h2 em, h1 em { font: italic 400 .82em/1 var(--italic); text-transform: none; letter-spacing: 0; color: var(--cinnabar); }
+.kicker { font: 500 13px/1 var(--sans); letter-spacing: .16em; text-transform: uppercase; margin: 0 0 24px; display: flex; align-items: center; gap: 12px; }
+.kicker::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--cinnabar); }
+.lead { color: var(--ink-2); max-width: 46ch; margin: 0; }
+.dark { background: var(--ink); color: var(--paper); }
+.dark .lead { color: var(--on-ink); }
 
 .btn {
   display: inline-flex; align-items: center; gap: 10px;
-  min-height: 48px; padding: 0 24px;
-  background: var(--brass); color: var(--bg);
+  min-height: 52px; padding: 0 28px; border-radius: 999px;
+  background: var(--cinnabar); color: var(--paper); border: 1.5px solid var(--cinnabar);
   font: 600 15px/1 var(--sans); letter-spacing: .02em; text-decoration: none;
-  border-radius: 2px; border: 1px solid var(--brass);
-  transition: background .2s var(--ease), color .2s var(--ease);
+  transition: background .2s var(--ease), color .2s var(--ease), transform .2s var(--ease);
 }
-.btn:hover { background: #d8b673; }
-.btn-ghost { background: transparent; color: var(--text); border-color: var(--line); }
-.btn-ghost:hover { background: transparent; border-color: var(--brass); color: var(--brass); }
+.btn:hover { background: var(--ink); border-color: var(--ink); }
+.dark .btn:hover { background: var(--paper); border-color: var(--paper); color: var(--ink); }
+.btn:active { transform: scale(.97); }
+.btn-ghost { background: transparent; color: var(--ink); border-color: var(--ink); }
+.btn-ghost:hover { background: var(--ink); color: var(--paper); }
 
-/* Шапка поверх фото: прозрачная, без липкости — кнопка записи и так есть в каждом блоке */
+/* ---------- первый экран: слово крупнее экрана, фото наезжает на его низ ---------- */
 .top {
-  position: absolute; inset: 0 0 auto; z-index: 2;
   display: flex; align-items: center; justify-content: space-between; gap: 16px;
-  padding: 24px var(--gutter);
+  padding: 20px var(--gutter);
 }
-.logo { display: inline-flex; align-items: center; min-height: 44px; font: 700 24px/1 var(--serif); letter-spacing: .04em; text-decoration: none; }
+.logo { font: 700 22px/1 var(--display); letter-spacing: .08em; text-transform: uppercase; text-decoration: none; min-height: 44px; display: inline-flex; align-items: center; }
 .top nav { display: flex; gap: 32px; font-size: 15px; }
-.top nav a { text-decoration: none; color: var(--muted); }
-.top nav a:hover { color: var(--text); }
+.top nav a { text-decoration: none; padding-block: 12px; }
+.top nav a:hover { color: var(--cinnabar); }
+.top .btn { min-height: 44px; padding: 0 20px; }
 
-.hero { position: relative; min-height: min(92svh, 860px); display: grid; align-items: end; overflow: hidden; }
-/* Фото только слева: рука с бритвой доходит до середины кадра и под текстом
-   спорила бы с заголовком. Правый край растворяется в фоне страницы. */
-.hero-photo { position: absolute; inset: 0 38% 0 0; background: var(--surface); }
-.hero-photo img { width: 100%; height: 100%; object-fit: cover; object-position: 20% center; }
-.hero-photo::after {
-  content: ""; position: absolute; inset: 0;
-  background: linear-gradient(90deg, rgb(20 19 18 / 0) 55%, var(--bg) 100%),
-              linear-gradient(180deg, rgb(20 19 18 / .7) 0, rgb(20 19 18 / 0) 22%),
-              linear-gradient(0deg, var(--bg) 0, rgb(20 19 18 / 0) 30%);
+.hero { position: relative; padding-bottom: 96px; }
+.word {
+  display: block; text-align: center; margin: 0; user-select: none;
+  font: 700 25.5vw/.78 var(--display); letter-spacing: -.015em; text-transform: uppercase;
+  will-change: transform;
 }
-.hero-body { position: relative; z-index: 1; padding-block: 160px 96px; }
-.hero-text { margin-left: auto; max-width: min(520px, 36vw); }
-.hero h1 { font-size: clamp(48px, 7vw, 88px); line-height: 1.02; letter-spacing: -.02em; }
-.hero h1 em { color: var(--brass); white-space: nowrap; }
-.hero .lead { color: #c9c1b4; font-size: 18px; }
-.hero-cta { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 40px; }
-.hero-facts { display: flex; flex-wrap: wrap; gap: 8px 24px; margin: 32px 0 0; padding: 0; list-style: none; font-size: 14px; color: var(--muted); }
+.hero-photo {
+  /* На старте слово читается целиком; на буквы фото наезжает только параллаксом при скролле */
+  position: relative; width: min(100% - 2 * var(--gutter), 1080px); margin: 2vw auto 0;
+  aspect-ratio: 16 / 9; overflow: hidden; background: var(--paper-2);
+  will-change: transform;
+}
+.hero-photo img { width: 100%; height: 100%; object-fit: cover; }
+/* Фото проявляется из блюра, как отпечаток в кювете. Без JS — сразу чёткое */
+.js .hero-photo img { filter: blur(24px) saturate(.4); transform: scale(1.08); transition: filter 1.4s var(--ease), transform 1.6s var(--ease); }
+.js .hero-photo.in img { filter: none; transform: none; }
+.hero-body { display: grid; grid-template-columns: 7fr 5fr; gap: 32px 64px; align-items: end; margin-top: 56px; }
+.hero h1 { font: 700 clamp(36px, 4.6vw, 64px)/1 var(--display); text-transform: uppercase; letter-spacing: -.005em; }
+.hero-side .lead { margin-bottom: 32px; }
+.hero-cta { display: flex; flex-wrap: wrap; gap: 12px; }
+.hero-facts { display: flex; flex-wrap: wrap; gap: 8px 32px; margin: 40px 0 0; padding: 24px 0 0; border-top: 1px solid var(--line); list-style: none; font-size: 14px; color: var(--ink-2); grid-column: 1 / -1; }
+
+/* ---------- бегущая строка ---------- */
+.marquee { overflow: hidden; padding: 22px 0; border-block: 1px solid var(--ink); }
+.marquee-track { display: flex; width: max-content; animation: run 38s linear infinite; }
+.marquee-track > div { display: flex; align-items: center; }
+.marquee span { font: 500 clamp(22px, 2.6vw, 34px)/1 var(--display); text-transform: uppercase; letter-spacing: .02em; white-space: nowrap; padding-inline: 28px; }
+.marquee i { width: 10px; height: 10px; border-radius: 50%; background: var(--cinnabar); flex: none; }
+.marquee:hover .marquee-track { animation-play-state: paused; }
+@keyframes run { to { transform: translateX(-50%); } }
 
 section { padding-block: var(--section); }
-.head { display: grid; grid-template-columns: 1fr 1fr; gap: 24px 64px; align-items: end; margin-bottom: 64px; }
-.head .lead { margin: 0; }
+.head { display: grid; grid-template-columns: 1fr auto; gap: 24px 64px; align-items: end; margin-bottom: 72px; }
+.head .lead { max-width: 38ch; }
 
-/* Прейскурант: каждая строка — ссылка на запись этой услуги */
-.menu { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--line); }
+/* ---------- прейскурант: каждая строка — ссылка, выезжают по одной ---------- */
+.menu { list-style: none; margin: 0; padding: 0; border-top: 2px solid var(--ink); }
+.menu li { border-bottom: 1px solid var(--line); }
 .menu-row {
-  display: grid; grid-template-columns: auto 1fr auto auto 24px; align-items: baseline; gap: 16px;
-  padding: 24px 0; border-bottom: 1px solid var(--line); text-decoration: none;
+  display: grid; grid-template-columns: auto 1fr auto auto 40px; align-items: baseline; gap: 20px;
+  padding: 26px 0; text-decoration: none; position: relative;
 }
-.menu-title { font: 400 clamp(22px, 2.6vw, 30px)/1.2 var(--serif); }
-.menu-leader { border-bottom: 1px dotted rgb(236 230 220 / .28); transform: translateY(-6px); }
-.menu-min { color: var(--muted); font-size: 15px; }
-.menu-price { color: var(--brass); font-weight: 500; font-size: 19px; min-width: 7ch; text-align: right; }
-.menu-go { color: var(--muted); transition: transform .2s var(--ease), color .2s var(--ease); }
-.menu-row:hover .menu-title, .menu-row:focus-visible .menu-title { color: var(--brass); }
-.menu-row:hover .menu-go, .menu-row:focus-visible .menu-go { color: var(--brass); transform: translateX(4px); }
-.menu-note { color: var(--muted); font-size: 15px; margin: 24px 0 0; }
+.menu-title { font: 500 clamp(26px, 3.4vw, 46px)/1.05 var(--display); text-transform: uppercase; transition: color .2s var(--ease), transform .3s var(--ease); }
+.menu-leader { border-bottom: 2px dotted rgb(22 20 18 / .3); transform: translateY(-8px); }
+.menu-min { color: var(--ink-2); font-size: 15px; }
+.menu-price { font: 500 clamp(20px, 2vw, 26px)/1 var(--display); min-width: 6ch; text-align: right; }
+.menu-go { justify-self: end; width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; border: 1.5px solid var(--ink); transition: background .2s var(--ease), color .2s var(--ease), transform .3s var(--ease); align-self: center; }
+.menu-row:hover .menu-title, .menu-row:focus-visible .menu-title { color: var(--cinnabar); transform: translateX(8px); }
+.menu-row:hover .menu-go, .menu-row:focus-visible .menu-go { background: var(--cinnabar); border-color: var(--cinnabar); color: var(--paper); transform: rotate(-45deg); }
+.menu-note { color: var(--ink-2); font-size: 15px; margin: 24px 0 0; }
 
-.feature { display: grid; grid-template-columns: 7fr 5fr; background: var(--surface); }
-.feature-photo { min-height: 520px; background: var(--bg); }
+/* ---------- галерея: газетный растр, под наведением — цвет ---------- */
+.cuts { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; }
+.cut { text-decoration: none; display: grid; gap: 16px; }
+.cut:nth-child(even) { margin-top: 64px; }
+.cut-img { position: relative; display: block; aspect-ratio: 4 / 5; overflow: hidden; background: var(--paper); }
+.cut-img img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.cut-color { opacity: 0; transition: opacity .5s var(--ease), transform .8s var(--ease); transform: scale(1.04); }
+.cut:hover .cut-color, .cut:focus-visible .cut-color { opacity: 1; transform: none; }
+.cut-cap b { display: block; font: 500 26px/1.1 var(--display); text-transform: uppercase; }
+.cut-cap span { color: var(--on-ink); font-size: 14px; }
+.cut:hover b { color: var(--cinnabar); }
+@media (hover: none) { .hover-only { display: none; } }
+
+/* ---------- мастера и их недели ---------- */
+.masters { display: grid; grid-template-columns: repeat(3, 1fr); gap: 32px; }
+.master figure { margin: 0; aspect-ratio: 4 / 5; overflow: hidden; background: var(--paper-2); }
+.master img { width: 100%; height: 100%; object-fit: cover; transition: transform .8s var(--ease); }
+.master:hover img { transform: scale(1.03); }
+.master h3 { font: 700 40px/1 var(--display); text-transform: uppercase; margin: 24px 0 8px; }
+.master p { color: var(--ink-2); margin: 0 0 16px; font-size: 16px; }
+.master ul { list-style: none; margin: 0; padding: 16px 0 0; border-top: 1px solid var(--line); font-size: 14px; color: var(--ink-2); display: flex; flex-wrap: wrap; gap: 4px 16px; }
+
+.sched-box { margin-top: 96px; }
+.sched-box h3 { font: 500 28px/1 var(--display); text-transform: uppercase; margin-bottom: 24px; }
+.sched-scroll { overflow-x: auto; }
+.sched { width: 100%; min-width: 640px; border-collapse: collapse; font-size: 15px; }
+.sched th, .sched td { padding: 16px 8px; text-align: center; border-bottom: 1px solid var(--line); }
+.sched thead th { font: 500 13px/1 var(--sans); letter-spacing: .14em; text-transform: uppercase; color: var(--ink-2); }
+.sched tbody th { text-align: left; font: 500 20px/1 var(--display); text-transform: uppercase; padding-left: 0; }
+.sched .off { color: rgb(22 20 18 / .4); font-size: 13px; }
+/* Сегодняшний столбец подсвечивает скрипт: день недели знает только браузер */
+.sched .today { background: var(--cinnabar); color: var(--paper); }
+.sched thead .today { color: var(--paper); border-radius: 12px 12px 0 0; }
+.sched tbody tr:last-child .today { border-radius: 0 0 12px 12px; }
+.sched .off.today { color: rgb(239 231 216 / .7); }
+.sched-note { color: var(--ink-2); font-size: 14px; margin: 16px 0 0; }
+
+/* ---------- бритьё ---------- */
+.feature { display: grid; grid-template-columns: 7fr 5fr; align-items: center; }
+.feature-photo { height: clamp(480px, 70vh, 760px); overflow: hidden; }
+/* Запас по высоте под параллакс, чтобы при сдвиге не открывался край */
+.feature-photo > div { height: 124%; translate: 0 -10%; will-change: transform; }
 .feature-photo img { width: 100%; height: 100%; object-fit: cover; }
-.feature-body { padding: 96px clamp(24px, 5vw, 80px); align-self: center; }
-.feature-body h2 { margin-bottom: 24px; }
-.feature-body p { color: var(--muted); margin: 0 0 16px; max-width: 42ch; }
+.feature-body { padding: 96px clamp(24px, 5vw, 88px); }
+.feature-body h2 { margin-bottom: 32px; }
+.feature-body p { color: var(--on-ink); margin: 0 0 16px; max-width: 40ch; }
 .feature-body .btn { margin-top: 24px; }
 
-.masters { display: grid; grid-template-columns: repeat(3, 1fr); gap: 32px; }
-.master figure { margin: 0; aspect-ratio: 4 / 5; background: var(--surface); overflow: hidden; }
-.master img { width: 100%; height: 100%; object-fit: cover; }
-.master h3 { font-size: 32px; margin: 24px 0 8px; }
-.master p { color: var(--muted); margin: 0 0 16px; font-size: 16px; }
-.master ul { list-style: none; margin: 0; padding: 16px 0 0; border-top: 1px solid var(--line); font-size: 14px; color: var(--muted); }
-.master li + li { margin-top: 4px; }
-
+/* ---------- как устроено ---------- */
 .how { display: grid; grid-template-columns: 6fr 5fr; gap: 64px; align-items: center; }
-.steps { list-style: none; margin: 48px 0 0; padding: 0; display: grid; gap: 32px; counter-reset: step; }
-.steps li { display: grid; grid-template-columns: 48px 1fr; border-top: 1px solid var(--line); padding-top: 24px; counter-increment: step; }
-.steps li::before { content: counter(step, upper-roman) "."; grid-row: span 2; font: italic 400 22px/1.2 var(--serif); color: var(--brass); }
-.steps h3 { font-size: 26px; margin: 0 0 8px; }
-.steps p { margin: 0; color: var(--muted); font-size: 16px; }
+.how .lead { margin-top: 24px; }
+.steps { list-style: none; margin: 56px 0 0; padding: 0; display: grid; gap: 32px; counter-reset: step; }
+.steps li { display: grid; grid-template-columns: 64px 1fr; border-top: 1px solid var(--line); padding-top: 24px; counter-increment: step; }
+.steps li::before { content: counter(step); grid-row: span 2; font: 700 44px/.9 var(--display); color: var(--cinnabar); }
+.steps h3 { font: 500 26px/1.1 var(--display); text-transform: uppercase; margin: 0 0 8px; }
+.steps p { margin: 0; color: var(--ink-2); font-size: 16px; }
 
 /* Макет переписки: цвета тёмной темы Telegram, а не палитры сайта, — узнаваться должен чат */
-.phone { margin: 0; justify-self: center; width: min(100%, 360px); }
+.phone { margin: 0; justify-self: center; width: min(100%, 360px); transform: rotate(2deg); }
 .chat {
-  border: 1px solid var(--line); border-radius: 28px; padding: 16px 12px 12px;
+  border-radius: 28px; padding: 16px 12px 12px; border: 6px solid var(--ink);
   background: #0e1621; font: 400 14px/1.4 system-ui, sans-serif; color: #f5f5f5;
-  box-shadow: 0 40px 80px -30px rgb(0 0 0 / .7);
+  box-shadow: 16px 16px 0 var(--cinnabar);
 }
 .chat-head { display: flex; align-items: center; gap: 10px; padding: 0 4px 12px; border-bottom: 1px solid rgb(255 255 255 / .06); margin-bottom: 12px; }
-.chat-ava { width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; background: var(--brass); color: var(--bg); font: 700 16px/1 var(--serif); }
+.chat-ava { width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; background: var(--cinnabar); color: var(--paper); font: 700 16px/1 var(--display); }
 .chat-head b { display: block; font-size: 15px; }
 .chat-head small { color: #6d7f8f; font-size: 12px; }
 .msg { background: #182533; border-radius: 12px 12px 12px 4px; padding: 8px 12px; margin: 0 24px 4px 0; white-space: pre-line; }
@@ -151,106 +206,142 @@ section { padding-block: var(--section); }
 .keys div { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 4px; }
 .keys span { background: rgb(24 37 51 / .7); border-radius: 8px; padding: 8px 4px; text-align: center; font-size: 13px; }
 .keys .on { background: #2b5278; }
-.phone figcaption { margin-top: 16px; text-align: center; font-size: 13px; color: var(--muted); }
+.phone figcaption { margin-top: 28px; text-align: center; font-size: 13px; color: var(--ink-2); }
 
-/* Липкая запись на телефоне: прайс длинный, до кнопки в шапке далеко */
+/* ---------- вопросы ---------- */
+.faq-grid { display: grid; grid-template-columns: 5fr 7fr; gap: 64px; align-items: start; }
+.faq details { border-bottom: 1px solid var(--line-ink); }
+.faq details:first-child { border-top: 1px solid var(--line-ink); }
+.faq summary {
+  list-style: none; cursor: pointer; display: flex; justify-content: space-between; align-items: center; gap: 24px;
+  padding: 24px 0; min-height: 44px; font: 500 clamp(20px, 2vw, 26px)/1.2 var(--display); text-transform: uppercase;
+}
+.faq summary::-webkit-details-marker { display: none; }
+.faq summary:hover { color: var(--cinnabar); }
+.plus { position: relative; flex: none; width: 36px; height: 36px; border-radius: 50%; border: 1.5px solid currentColor; transition: transform .3s var(--ease), background .2s var(--ease); }
+.plus::before, .plus::after { content: ""; position: absolute; inset: 50% 10px auto; height: 1.5px; background: currentColor; translate: 0 -50%; }
+.plus::after { rotate: 90deg; transition: rotate .3s var(--ease); }
+details[open] .plus { background: var(--cinnabar); border-color: var(--cinnabar); color: var(--paper); }
+details[open] .plus::after { rotate: 0deg; }
+.faq p { margin: 0; padding: 0 64px 28px 0; color: var(--on-ink); max-width: 60ch; }
+/* Плавное раскрытие там, где браузер умеет анимировать height: auto; в остальных — мгновенно */
+.faq details::details-content { block-size: 0; overflow: hidden; transition: block-size .35s var(--ease), content-visibility .35s allow-discrete; }
+.faq details[open]::details-content { block-size: auto; }
+
+/* ---------- адрес ---------- */
+.visit-grid { display: grid; grid-template-columns: 5fr 4fr 3fr; gap: 48px; align-items: start; }
+.visit dl { margin: 0; display: grid; gap: 24px; }
+.visit dt { font-size: 13px; letter-spacing: .14em; text-transform: uppercase; color: var(--ink-2); margin-bottom: 4px; }
+.visit dd { margin: 0; font-size: 19px; }
+.visit .btn { justify-self: end; }
+
+footer { padding-block: 32px 48px; border-top: 1px solid var(--line); color: var(--ink-2); font-size: 14px; }
+footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px 24px; }
+
+.ph { display: grid; place-items: center; width: 100%; height: 100%; color: var(--ink-2); font-size: 13px; letter-spacing: .14em; text-transform: uppercase; border: 1px dashed var(--line); }
+
+/* ---------- появление при скролле: строки прайса, плитки, заголовки ---------- */
+.js [data-reveal] { opacity: 0; transform: translateY(32px); transition: opacity .6s var(--ease), transform .8s var(--ease); transition-delay: calc(var(--i, 0) * 70ms); }
+.js .menu [data-reveal] { transform: translateX(-48px); }
+.js [data-reveal].in { opacity: 1; transform: none; }
+.js h2[data-reveal] { clip-path: inset(0 0 100% 0); opacity: 1; transform: translateY(24px); transition: clip-path .9s var(--ease), transform .9s var(--ease); }
+.js h2[data-reveal].in { clip-path: inset(0 0 -10% 0); transform: none; }
+
 .dock { display: none; }
 @media (max-width: 600px) {
   .dock {
-    display: flex; position: fixed; inset: auto 12px 12px; z-index: 5; justify-content: center;
+    display: flex; position: fixed; inset: auto 12px 12px; z-index: 5;
     transition: transform .25s var(--ease), opacity .25s var(--ease);
   }
-  .dock .btn { width: 100%; justify-content: center; box-shadow: 0 12px 32px rgb(0 0 0 / .5); }
+  .dock .btn { width: 100%; justify-content: center; box-shadow: 0 12px 32px rgb(22 20 18 / .35); }
   .dock[data-hidden] { transform: translateY(150%); opacity: 0; pointer-events: none; }
   footer { padding-bottom: 96px; }
 }
 
-.visit { border-top: 1px solid var(--line); }
-.visit-grid { display: grid; grid-template-columns: 5fr 4fr 3fr; gap: 48px; align-items: start; }
-.visit dl { margin: 0; display: grid; gap: 24px; }
-.visit dt { font-size: 13px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); margin-bottom: 4px; }
-.visit dd { margin: 0; font-size: 19px; }
-.visit .cta { justify-self: end; }
-
-footer { padding-block: 32px 48px; border-top: 1px solid var(--line); color: var(--muted); font-size: 14px; }
-footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px 24px; }
-
-.ph { display: grid; place-items: center; width: 100%; height: 100%; color: var(--muted); font-size: 13px; letter-spacing: .14em; text-transform: uppercase; border: 1px dashed var(--line); }
-
-/* Один срежиссированный момент — вход заголовка; остальное не двигается само */
-@keyframes rise { from { opacity: 0; transform: translateY(12px); } }
-.hero-text > * { animation: rise .7s var(--ease) both; }
-.hero-text > :nth-child(2) { animation-delay: .08s; }
-.hero-text > :nth-child(3) { animation-delay: .16s; }
-.hero-text > :nth-child(4) { animation-delay: .24s; }
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
   *, *::before, *::after { animation: none !important; transition: none !important; }
+  .js [data-reveal], .js h2[data-reveal] { opacity: 1; transform: none; clip-path: none; }
+  .js .hero-photo img { filter: none; transform: none; }
 }
 
 @media (max-width: 900px) {
   :root { --section: 80px; }
   .top nav { display: none; }
-  /* Узко делить экран пополам нельзя: фото на всю ширину, текст поверх нижней тёмной части */
-  .hero-photo { inset: 0; }
-  .hero-photo::after { background: linear-gradient(180deg, rgb(20 19 18 / .6) 0, rgb(20 19 18 / 0) 25%, rgb(20 19 18 / .3) 45%, var(--bg) 85%); }
-  .hero-text { max-width: 560px; margin-left: 0; }
-  .head, .feature, .visit-grid { grid-template-columns: 1fr; }
-  .head { margin-bottom: 40px; }
-  .feature-photo { min-height: 0; aspect-ratio: 3 / 2; }
-  .feature-body { padding: 56px var(--gutter); }
+  .hero-body, .head, .feature, .how, .faq-grid, .visit-grid { grid-template-columns: 1fr; }
+  .hero-body { margin-top: 40px; gap: 24px; }
+  .head { margin-bottom: 48px; }
+  .cuts { grid-template-columns: repeat(2, 1fr); gap: 16px; }
+  .cut:nth-child(even) { margin-top: 40px; }
   .masters { grid-template-columns: 1fr; gap: 48px; }
-  .how { grid-template-columns: 1fr; gap: 56px; }
-  .master figure { aspect-ratio: 4 / 5; max-height: 520px; }
-  .visit .cta { justify-self: start; }
+  .master figure { max-height: 520px; }
+  .feature-photo { height: auto; aspect-ratio: 3 / 2; }
+  .feature-body { padding: 56px var(--gutter) 80px; }
+  .how, .faq-grid { gap: 48px; }
+  .visit .btn { justify-self: start; }
 }
 @media (max-width: 600px) {
   body { font-size: 16px; }
-  .hero { min-height: 0; align-items: stretch; }
-  .hero-photo { position: relative; aspect-ratio: 4 / 5; inset: auto; }
-  .hero-photo img { object-position: 35% center; }
-  .hero-photo::after { background: linear-gradient(0deg, var(--bg) 0, rgb(20 19 18 / 0) 45%); }
-  .hero { display: block; }
-  .hero-body { padding-block: 0 64px; margin-top: -96px; }
+  /* Узко шапке нечего показать: слово и есть логотип, запись — в нижней кнопке */
+  .top { display: none; }
+  .word { padding-top: 24px; }
+  .hero { padding-bottom: 64px; }
+  /* Квадрат, а не 4:5: иначе кнопка записи уходит под первый экран 375×812 */
+  .hero-photo { aspect-ratio: 1; margin-top: 3vw; }
+  .hero-photo img { object-position: 30% center; }
   .hero-cta .btn { flex: 1 1 100%; justify-content: center; }
-  .menu-row { grid-template-columns: 1fr auto 20px; gap: 4px 12px; padding: 20px 0; }
+  .menu-row { grid-template-columns: 1fr auto 36px; gap: 4px 12px; padding: 20px 0; }
   .menu-leader { display: none; }
   .menu-title { grid-column: 1; }
   .menu-price { grid-column: 2; grid-row: 1; }
-  .menu-go { grid-column: 3; grid-row: 1; }
+  .menu-go { grid-column: 3; grid-row: 1 / span 2; width: 36px; height: 36px; }
   .menu-min { grid-column: 1; grid-row: 2; font-size: 14px; }
+  .cut-cap b { font-size: 20px; }
+  .sched-box { margin-top: 64px; }
+  .faq p { padding-right: 0; }
+  .phone { transform: none; }
 }
 </style>
 </head>
 <body>
+<script>document.documentElement.classList.add("js")</script>
 
 <header class="hero">
   <div class="top">
     <a class="logo" href="#">Бритва</a>
     <nav aria-label="Разделы">
       <a href="#price">Прайс</a>
+      <a href="#cuts">Работы</a>
       <a href="#masters">Мастера</a>
+      <a href="#faq">Вопросы</a>
       <a href="#visit">Адрес</a>
     </nav>
     <a class="btn btn-ghost" href="https://t.me/britvaa_demo_bot">Записаться</a>
   </div>
-  <div class="hero-photo"><img src="img/hero.jpg" alt="Кресло и зеркало в зале барбершопа" width="1600" height="900" fetchpriority="high" decoding="async"></div>
+  <p class="word" aria-hidden="true" data-speed="-.12">Бритва</p>
+  <div class="hero-photo" data-speed=".06"><img src="img/hero.jpg" alt="Кресло и зеркало в зале барбершопа" width="1600" height="900" fetchpriority="high" decoding="async"></div>
   <div class="wrap hero-body">
-    <div class="hero-text">
+    <div>
       <p class="kicker">Барбершоп · Москва</p>
       <h1>Стрижка, которую <em>не надо</em> объяснять</h1>
-      <p class="lead">Три мастера, опасная бритва и горячее полотенце. Записаться — минута в Телеграме, без звонков и администратора.</p>
+    </div>
+    <div class="hero-side">
+      <p class="lead">Три мастера, опасная бритва и горячее полотенце. Запись — минута в Телеграме, без звонков.</p>
       <div class="hero-cta">
         <a class="btn" href="https://t.me/britvaa_demo_bot">Записаться в Телеграме <span aria-hidden="true">→</span></a>
         <a class="btn btn-ghost" href="#price">Прайс</a>
       </div>
-      <ul class="hero-facts">
-        <li>Пн–Вт 10:00–21:00, Ср–Вс 10:00–22:00</li>
-        <li>Москва, ул. Демонстрационная, 7</li>
-      </ul>
     </div>
+    <ul class="hero-facts">
+      <li>Пн–Вт 10:00–21:00, Ср–Вс 10:00–22:00</li>
+      <li>Москва, ул. Демонстрационная, 7</li>
+    </ul>
   </div>
 </header>
+
+<div class="marquee dark" aria-hidden="true">
+  <div class="marquee-track"><div><span>Мужская стрижка</span><i aria-hidden="true"></i><span>Стрижка машинкой</span><i aria-hidden="true"></i><span>Борода и усы</span><i aria-hidden="true"></i><span>Стрижка + борода</span><i aria-hidden="true"></i><span>Детская стрижка</span><i aria-hidden="true"></i><span>Королевское бритьё</span><i aria-hidden="true"></i><span>Без звонков</span><i aria-hidden="true"></i><span>Запись в Телеграме</span><i aria-hidden="true"></i></div><div aria-hidden="true"><span>Мужская стрижка</span><i aria-hidden="true"></i><span>Стрижка машинкой</span><i aria-hidden="true"></i><span>Борода и усы</span><i aria-hidden="true"></i><span>Стрижка + борода</span><i aria-hidden="true"></i><span>Детская стрижка</span><i aria-hidden="true"></i><span>Королевское бритьё</span><i aria-hidden="true"></i><span>Без звонков</span><i aria-hidden="true"></i><span>Запись в Телеграме</span><i aria-hidden="true"></i></div></div>
+</div>
 
 <main>
 <section id="price">
@@ -258,9 +349,9 @@ footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; g
     <div class="head">
       <div>
         <p class="kicker">Прейскурант</p>
-        <h2>Услуги и цены</h2>
+        <h2 data-reveal>Услуги <em>и</em> цены</h2>
       </div>
-      <p class="lead">Цена окончательная, время — честное: мастер не принимает следующего, пока не закончил с вами.</p>
+      <p class="lead">Цена окончательная. Мастер не берёт следующего, пока не закончил с вами.</p>
     </div>
     <ol class="menu">
       <li><a class="menu-row" href="https://t.me/britvaa_demo_bot?start=s1"><span class="menu-title">Мужская стрижка</span><span class="menu-leader"></span><span class="menu-min">60&nbsp;мин</span><span class="menu-price">1&nbsp;800&nbsp;₽</span><span class="menu-go" aria-hidden="true">→</span></a></li>
@@ -274,25 +365,44 @@ footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; g
   </div>
 </section>
 
-<div class="feature">
-  <div class="feature-photo"><img src="img/detail-shave.jpg" alt="Королевское бритьё опасной бритвой" width="1500" height="1000" loading="lazy" decoding="async"></div>
-  <div class="feature-body">
-    <hr class="blade">
-    <h2>Королевское бритьё</h2>
-    <p>Горячее полотенце распаривает кожу, пена взбивается помазком, бреем опасной бритвой в два прохода — по росту и против.</p>
-    <p>Холодный компресс и бальзам в конце. 45 минут, после которых электробритва кажется недоразумением.</p>
-    <a class="btn" href="https://t.me/britvaa_demo_bot?start=s6">Записаться на бритьё <span aria-hidden="true">→</span></a>
+<section id="cuts" class="dark">
+  <div class="wrap">
+    <div class="head">
+      <div>
+        <p class="kicker">Работы</p>
+        <h2 data-reveal>Что <em>уходит</em> из кресла</h2>
+      </div>
+      <p class="lead">Нажмите на снимок — запишетесь на эту стрижку.<span class="hover-only"> Под курсором проявится цвет.</span></p>
+    </div>
+    <div class="cuts">
+      <a class="cut" href="https://t.me/britvaa_demo_bot?start=s1" data-reveal style="--i:0">
+        <span class="cut-img"><img src="img/cut-fade-dots.jpg" alt="Фейд, работа мастера Игорь" width="800" height="1000" loading="lazy" decoding="async"><img class="cut-color" src="img/cut-fade.jpg" alt="" width="800" height="1000" loading="lazy" decoding="async"></span>
+        <span class="cut-cap"><b>Фейд</b><span>Игорь · мужская стрижка</span></span>
+      </a>
+      <a class="cut" href="https://t.me/britvaa_demo_bot?start=s1" data-reveal style="--i:1">
+        <span class="cut-img"><img src="img/cut-classic-dots.jpg" alt="Классика с пробором, работа мастера Артём" width="800" height="1000" loading="lazy" decoding="async"><img class="cut-color" src="img/cut-classic.jpg" alt="" width="800" height="1000" loading="lazy" decoding="async"></span>
+        <span class="cut-cap"><b>Классика с пробором</b><span>Артём · мужская стрижка</span></span>
+      </a>
+      <a class="cut" href="https://t.me/britvaa_demo_bot?start=s2" data-reveal style="--i:2">
+        <span class="cut-img"><img src="img/cut-buzz-dots.jpg" alt="Под машинку, работа мастера Игорь" width="800" height="1000" loading="lazy" decoding="async"><img class="cut-color" src="img/cut-buzz.jpg" alt="" width="800" height="1000" loading="lazy" decoding="async"></span>
+        <span class="cut-cap"><b>Под машинку</b><span>Игорь · стрижка машинкой</span></span>
+      </a>
+      <a class="cut" href="https://t.me/britvaa_demo_bot?start=s1" data-reveal style="--i:3">
+        <span class="cut-img"><img src="img/cut-long-dots.jpg" alt="Длинные, работа мастера Даша" width="800" height="1000" loading="lazy" decoding="async"><img class="cut-color" src="img/cut-long.jpg" alt="" width="800" height="1000" loading="lazy" decoding="async"></span>
+        <span class="cut-cap"><b>Длинные</b><span>Даша · мужская стрижка</span></span>
+      </a>
+    </div>
   </div>
-</div>
+</section>
 
 <section id="masters">
   <div class="wrap">
     <div class="head">
       <div>
         <p class="kicker">Мастера</p>
-        <h2>Кто вас пострижёт</h2>
+        <h2 data-reveal>Кто <em>вас</em> пострижёт</h2>
       </div>
-      <p class="lead">В боте видно свободное время каждого. Записываетесь к конкретному мастеру, а не «к кому-нибудь».</p>
+      <p class="lead">Записываетесь к конкретному мастеру, а не «к кому-нибудь».</p>
     </div>
     <div class="masters">
       <article class="master">
@@ -314,29 +424,54 @@ footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; g
         <ul aria-label="Услуги мастера"><li>Мужская стрижка</li><li>Стрижка машинкой</li><li>Детская стрижка</li></ul>
       </article>
     </div>
+    <div class="sched-box">
+      <h3>Кто когда работает</h3>
+      <div class="sched-scroll" tabindex="0" role="region" aria-label="График мастеров по дням недели">
+      <table class="sched">
+        <thead><tr><td></td><th scope="col" data-d="0">Пн</th><th scope="col" data-d="1">Вт</th><th scope="col" data-d="2">Ср</th><th scope="col" data-d="3">Чт</th><th scope="col" data-d="4">Пт</th><th scope="col" data-d="5">Сб</th><th scope="col" data-d="6">Вс</th></tr></thead>
+        <tbody>
+        <tr><th scope="row">Артём</th><td data-d="0">10–21</td><td data-d="1">10–21</td><td data-d="2">10–21</td><td data-d="3">10–21</td><td data-d="4">10–21</td><td data-d="5" class="off">выходной</td><td data-d="6" class="off">выходной</td></tr>
+        <tr><th scope="row">Игорь</th><td data-d="0" class="off">выходной</td><td data-d="1" class="off">выходной</td><td data-d="2">11–22</td><td data-d="3">11–22</td><td data-d="4">11–22</td><td data-d="5">11–22</td><td data-d="6">11–22</td></tr>
+        <tr><th scope="row">Даша</th><td data-d="0">10–20</td><td data-d="1">10–20</td><td data-d="2" class="off">выходной</td><td data-d="3" class="off">выходной</td><td data-d="4">10–20</td><td data-d="5">10–20</td><td data-d="6">10–20</td></tr>
+        </tbody>
+      </table>
+      </div>
+      <p class="sched-note">Свободные окна внутри этих часов бот покажет на 7&nbsp;дней вперёд.</p>
+    </div>
   </div>
 </section>
+
+<div class="feature dark">
+  <div class="feature-photo"><div data-speed=".08"><img src="img/detail-shave.jpg" alt="Королевское бритьё опасной бритвой" width="1500" height="1000" loading="lazy" decoding="async"></div></div>
+  <div class="feature-body">
+    <p class="kicker">45 минут</p>
+    <h2 data-reveal>Королевское <em>бритьё</em></h2>
+    <p>Горячее полотенце, пена помазком, опасная бритва в два прохода — по росту и против.</p>
+    <p>Холодный компресс и бальзам в конце. После этого электробритва кажется недоразумением.</p>
+    <a class="btn" href="https://t.me/britvaa_demo_bot?start=s6">Записаться на бритьё <span aria-hidden="true">→</span></a>
+  </div>
+</div>
 
 <section id="how">
   <div class="wrap how">
     <div>
       <p class="kicker">Запись в Телеграме</p>
-      <h2>Как это устроено</h2>
-      <p class="lead">Ни приложения, ни регистрации. Бот уже в Телеграме, который стоит у вас в телефоне.</p>
-    <ol class="steps">
-      <li>
-        <h3>Услуга</h3>
-        <p>Выбираете здесь, в прайсе, или прямо в боте. Цена и длительность видны сразу.</p>
-      </li>
-      <li>
-        <h3>Мастер и время</h3>
-        <p>Бот показывает только свободные окна на 7&nbsp;дней вперёд. Занятое время не предлагается вовсе.</p>
-      </li>
-      <li>
-        <h3>Напоминание</h3>
-        <p>Бот напомнит за сутки и за 2&nbsp;часа. Перенести или отменить можно в том же чате, не позже чем за 3&nbsp;часа.</p>
-      </li>
-    </ol>
+      <h2 data-reveal>Как <em>это</em> устроено</h2>
+      <p class="lead">Ни приложения, ни регистрации — бот уже в вашем Телеграме.</p>
+      <ol class="steps">
+        <li>
+          <h3>Услуга</h3>
+          <p>Здесь, в прайсе, или прямо в боте. Цена и длительность видны сразу.</p>
+        </li>
+        <li>
+          <h3>Мастер и время</h3>
+          <p>Только свободные окна на 7&nbsp;дней вперёд. Занятое время бот не предложит.</p>
+        </li>
+        <li>
+          <h3>Напоминание</h3>
+          <p>За сутки и за 2&nbsp;часа. Перенести или отменить — в том же чате, не позже чем за 3&nbsp;часа.</p>
+        </li>
+      </ol>
     </div>
     <figure class="phone" aria-label="Пример переписки с ботом записи">
       <div class="chat">
@@ -361,18 +496,53 @@ footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; g
   </div>
 </section>
 
+<section id="faq" class="dark faq">
+  <div class="wrap faq-grid">
+    <div>
+      <p class="kicker">Вопросы</p>
+      <h2 data-reveal>Коротко <em>о</em> главном</h2>
+    </div>
+    <div>
+      <details>
+        <summary>Нужно ли что-то устанавливать?<span class="plus" aria-hidden="true"></span></summary>
+        <p>Нет. Бот открывается в том Телеграме, что уже стоит в телефоне. Регистрации тоже нет — нужно только имя и номер.</p>
+      </details>
+      <details>
+        <summary>На сколько вперёд можно записаться?<span class="plus" aria-hidden="true"></span></summary>
+        <p>На 7&nbsp;дней. Дальше мастера расписание ещё не открыли.</p>
+      </details>
+      <details>
+        <summary>Как перенести или отменить?<span class="plus" aria-hidden="true"></span></summary>
+        <p>В том же чате, у своей записи. Не позже чем за 3&nbsp;часа до визита — потом слот уже никто не займёт, и вопрос решает администратор.</p>
+      </details>
+      <details>
+        <summary>Напомните о записи?<span class="plus" aria-hidden="true"></span></summary>
+        <p>Да, дважды: за сутки и за 2&nbsp;часа.</p>
+      </details>
+      <details>
+        <summary>А без Телеграма?<span class="plus" aria-hidden="true"></span></summary>
+        <p>Пока только через бота: он видит живое расписание мастеров, и занятое время не предложит.</p>
+      </details>
+      <details>
+        <summary>Детей стрижёте?<span class="plus" aria-hidden="true"></span></summary>
+        <p>Да, детская стрижка — у мастеров: Игорь, Даша.</p>
+      </details>
+    </div>
+  </div>
+</section>
+
 <section id="visit" class="visit">
   <div class="wrap visit-grid">
     <div>
       <p class="kicker">Адрес</p>
-      <h2>Заходите</h2>
+      <h2 data-reveal>Заходите</h2>
     </div>
     <dl>
       <div><dt>Где</dt><dd>Москва, ул. Демонстрационная, 7</dd></div>
       <div><dt>Когда</dt><dd>Пн–Вт 10:00–21:00, Ср–Вс 10:00–22:00</dd></div>
 
     </dl>
-    <a class="btn cta" href="https://t.me/britvaa_demo_bot">Записаться <span aria-hidden="true">→</span></a>
+    <a class="btn" href="https://t.me/britvaa_demo_bot">Записаться <span aria-hidden="true">→</span></a>
   </div>
 </section>
 </main>
@@ -380,7 +550,7 @@ footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; g
 <footer>
   <div class="wrap">
     <span>Барбершоп «Бритва»</span>
-    <span>Демо-проект: барбершоп, мастера и цены вымышленные · <a href="v2.html">Светлый вариант сайта</a></span>
+    <span>Демо-проект: барбершоп, мастера и цены вымышленные</span>
   </div>
 </footer>
 
@@ -388,20 +558,57 @@ footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; g
   <a class="btn" href="https://t.me/britvaa_demo_bot">Записаться в Телеграме <span aria-hidden="true">→</span></a>
 </div>
 <script>
-// Пока видна кнопка первого экрана, вторая внизу только дублирует её
 (() => {
+  const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  // Строки прайса размечаются здесь, а не в build.py: разметка MENU общая с v1
+  document.querySelectorAll(".menu li").forEach((li, i) => {
+    li.setAttribute("data-reveal", "");
+    li.style.setProperty("--i", i);
+  });
+  const seen = new IntersectionObserver((entries) => {
+    for (const e of entries) {
+      if (!e.isIntersecting) continue;
+      e.target.classList.add("in");
+      seen.unobserve(e.target);
+    }
+  }, { rootMargin: "0px 0px -12% 0px" });
+  document.querySelectorAll("[data-reveal]").forEach((el) => seen.observe(el));
+
+  const photo = document.querySelector(".hero-photo");
+  const img = photo && photo.querySelector("img");
+  const show = () => photo.classList.add("in");
+  if (img && !img.complete) img.addEventListener("load", show, { once: true });
+  else if (photo) requestAnimationFrame(show);
+
+  // Сегодняшний день недели в графике; getDay() считает с воскресенья
+  const today = (new Date().getDay() + 6) % 7;
+  document.querySelectorAll(`.sched [data-d="${today}"]`).forEach((c) => c.classList.add("today"));
+
   const dock = document.querySelector(".dock");
-  const hero = document.querySelector(".hero-cta");
-  if (!dock || !hero) return;
+  const cta = document.querySelector(".hero-cta");
+  const layers = still ? [] : [...document.querySelectorAll("[data-speed]")];
   let queued = false;
-  const update = () => {
+  const frame = () => {
     queued = false;
-    dock.toggleAttribute("data-hidden", hero.getBoundingClientRect().bottom > 0);
+    const vh = innerHeight;
+    for (const el of layers) {
+      const r = el.parentElement.getBoundingClientRect();
+      // Слои за пределами экрана не трогаем: transform на них — лишняя перекомпоновка
+      if (r.bottom < -vh || r.top > 2 * vh) continue;
+      // Первый экран покоится на нулевом скролле, остальные слои — в центре экрана:
+      // от центра шапка на старте уже сдвинула бы слово за верхний край
+      const off = el.closest(".hero") ? -scrollY : r.top + r.height / 2 - vh / 2;
+      const shift = off * Number(el.dataset.speed);
+      el.style.transform = `translate3d(0, ${shift.toFixed(1)}px, 0)`;
+    }
+    if (dock && cta) dock.toggleAttribute("data-hidden", cta.getBoundingClientRect().bottom > 0);
   };
   addEventListener("scroll", () => {
-    if (!queued) { queued = true; requestAnimationFrame(update); }
+    if (!queued) { queued = true; requestAnimationFrame(frame); }
   }, { passive: true });
-  update();
+  addEventListener("resize", frame);
+  frame();
 })();
 </script>
 </body>

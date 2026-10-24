@@ -240,8 +240,8 @@ def main() -> None:
     ap.add_argument("--bot", default="britvaa_demo_bot")
     ap.add_argument("--city", default="Москва")
     args = ap.parse_args()
-    # v2 живёт рядом с v1, пока не выбрали одну: данные общие, разметка своя
-    for tpl, name in (("template.html", "index.html"), ("template-v2.html", "v2.html")):
+    # Основной сайт — светлый v2. Тёмный v1 ни откуда не связан: он для скринов в портфолио
+    for tpl, name in (("template-v2.html", "index.html"), ("template.html", "v1.html")):
         out = SITE / name
         out.write_text(build(args.bot, args.city, tpl), encoding="utf-8", newline="\n")
         print(f"собрано: {out}")
