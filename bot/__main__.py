@@ -7,7 +7,7 @@ from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
 from aiogram.fsm.storage.memory import MemoryStorage
 
-from bot import reminders
+from bot import reminders, web
 from bot.config import settings
 from bot.db.base import init_db, session_factory
 from bot.handlers import setup_routers
@@ -34,12 +34,18 @@ async def main() -> None:
 
     me = await bot.get_me()
     log.info("Запускаю @%s, админы: %s", me.username, settings.admins or "не заданы")
-    await bot.delete_webhook(drop_pending_updates=True)
     task = asyncio.create_task(reminders.loop(bot))
     try:
-        await dp.start_polling(bot)
+        if settings.use_webhook:
+            await web.run(bot, dp)
+            await asyncio.Event().wait()
+        else:
+            # Локальный polling снимает webhook прода: не запускать при живом деплое
+            await bot.delete_webhook(drop_pending_updates=True)
+            await dp.start_polling(bot)
     finally:
         task.cancel()
+        await bot.session.close()
 
 
 if __name__ == "__main__":

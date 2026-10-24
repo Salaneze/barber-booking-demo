@@ -1,0 +1,30 @@
+# Сервис на Render: бот на webhook и сайт салона одним процессом.
+# Секреты сюда не пишем: sync:false — Render спросит их при создании сервиса.
+services:
+  - type: web
+    name: britva-barber
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: python -m bot
+    healthCheckPath: /healthz
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.12.7"
+      - key: BOT_TOKEN
+        sync: false
+      - key: ADMIN_IDS
+        sync: false
+      # Postgres с Neon. Без него SQLite живёт в контейнере, и каждый деплой
+      # или рестарт стирает все записи клиентов
+      - key: DB_URL
+        sync: false
+      - key: USE_WEBHOOK
+        value: "true"
+      # Снаружи контейнера слушать 0.0.0.0, иначе прокси Render до порта не достучится
+      - key: WEB_HOST
+        value: 0.0.0.0
+      - key: SHOP_ADDRESS
+        value: ул. Демонстрационная, 7
+      - key: SHOP_TZ
+        value: Europe/Moscow
