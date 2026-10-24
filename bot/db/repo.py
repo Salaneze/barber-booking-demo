@@ -41,14 +41,16 @@ async def masters_for(session: AsyncSession, service_id: int) -> list[Master]:
     return [m for m in rows if any(s.id == service_id for s in m.services)]
 
 
-async def hours_on(session: AsyncSession, master: Master, day: date) -> tuple[int, int] | None:
-    off = await session.scalar(select(DayOff.id).where(DayOff.master_id == master.id, DayOff.day == day))
-    if off:
-        return None
+def _usual_hours(master: Master, day: date) -> tuple[int, int] | None:
     for h in master.hours:
         if h.weekday == day.weekday():
             return h.start_min, h.end_min
     return None
+
+
+async def hours_on(session: AsyncSession, master: Master, day: date) -> tuple[int, int] | None:
+    off = await session.scalar(select(DayOff.id).where(DayOff.master_id == master.id, DayOff.day == day))
+    return None if off else _usual_hours(master, day)
 
 
 async def busy(session: AsyncSession, master_id: int, day: date, exclude_id: int | None = None):
@@ -87,9 +89,49 @@ async def slots_any(session, service: Service, day: date, now: datetime,
 
 async def open_days(session, service: Service, master_id: int, now: datetime,
                     exclude_id: int | None = None) -> list[date]:
+    return [d for d, n in (await calendar(session, service, master_id, now, exclude_id)).items() if n]
+
+
+async def calendar(session, service: Service, master_id: int, now: datetime,
+                   exclude_id: int | None = None) -> dict[date, int]:
+    """День окна -> сколько разных начал свободно хотя бы у одного мастера.
+
+    Считает то же, что slots_any по дню, но для всего окна сразу: по дню на запрос
+    месяц в Mini App стоил бы сотню с лишним походов в базу (дни x мастера x 2),
+    а здесь занятость и выходные приходят двумя запросами.
+    """
+    masters = await masters_for(session, service.id)
+    if master_id:
+        masters = [m for m in masters if m.id == master_id]
     today = local_day(now)
     days = [today + timedelta(days=i) for i in range(settings.days_ahead)]
-    return [d for d in days if await slots_any(session, service, d, now, master_id, exclude_id)]
+    if not masters:
+        return {d: 0 for d in days}
+    ids = [m.id for m in masters]
+    lo, hi = local_to_utc(days[0], 0, tz()), local_to_utc(days[-1], 24 * 60, tz())
+    q = select(Booking.master_id, Booking.starts_at, Booking.ends_at).where(
+        Booking.master_id.in_(ids), Booking.status == BookingStatus.ACTIVE,
+        Booking.starts_at < hi, Booking.ends_at > lo,
+    )
+    if exclude_id:
+        q = q.where(Booking.id != exclude_id)
+    busy_of: dict[int, list] = {i: [] for i in ids}
+    for mid, a, b in await session.execute(q):
+        busy_of[mid].append((a, b))
+    offs = {(mid, d) for mid, d in await session.execute(
+        select(DayOff.master_id, DayOff.day).where(DayOff.master_id.in_(ids), DayOff.day.between(days[0], days[-1])))}
+
+    out = {}
+    for d in days:
+        starts: set[datetime] = set()
+        for m in masters:
+            if (m.id, d) in offs:
+                continue
+            # Чужие дни в busy_of не мешают: free_slots режет всё по рабочим часам этого дня
+            starts.update(free_slots(d, _usual_hours(m, d), busy_of[m.id], service.minutes, now=now, tz=tz(),
+                                     step=settings.slot_step_minutes, lead=settings.lead_minutes))
+        out[d] = len(starts)
+    return out
 
 
 async def active_count(session, user_id: int, now: datetime) -> int:

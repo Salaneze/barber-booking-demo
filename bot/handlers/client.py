@@ -16,7 +16,7 @@ from aiogram.filters.callback_data import CallbackData
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.types import (CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup, KeyboardButton,
-                           Message, ReplyKeyboardMarkup)
+                           Message, ReplyKeyboardMarkup, WebAppInfo)
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from bot.config import settings
@@ -24,7 +24,8 @@ from bot.db import repo
 from bot.db.models import Booking, Master, Service, utcnow
 from bot.notify import notify_admins
 from bot.plural import plural
-from bot.text import booking_card, day_label, esc, hhmm, rub, when
+from bot.text import (admin_booked_text, admin_cancelled_text, booked_text, booking_card, day_label, esc, hhmm,
+                      rub, when)
 
 log = logging.getLogger(__name__)
 router = Router()
@@ -80,7 +81,14 @@ def from_d(d: int) -> date:
     return date(d // 10000, d // 100 % 100, d % 100)
 
 
-MENU = kb([btn("✂️ Записаться", "book")], [btn("📅 Мои записи", "my")], [btn("📍 Адрес и контакты", "contacts")])
+def calendar_btn(text: str = "🗓 Записаться в календаре") -> list[InlineKeyboardButton]:
+    # Только инлайн-кнопка: Mini App с reply-клавиатуры приходит без initData,
+    # и сервер не узнал бы, кто записывается
+    return [InlineKeyboardButton(text=text, web_app=WebAppInfo(url=settings.webapp_url))] if settings.webapp_url else []
+
+
+MENU = kb([btn("✂️ Записаться", "book")], calendar_btn(), [btn("📅 Мои записи", "my")],
+          [btn("📍 Адрес и контакты", "contacts")])
 
 # Те же три пункта постоянно внизу экрана: меню в сообщении уезжает вверх
 # по переписке, а нижние кнопки на месте, сколько бы ни было сообщений
@@ -185,8 +193,11 @@ async def days(cb: CallbackQuery, callback_data: Bk, session: AsyncSession) -> N
         n = settings.days_ahead
         return await edit(cb, f"На ближайшие {n} {plural(n, 'день', 'дня', 'дней')} свободного времени нет. "
                               "Попробуйте другого мастера.", kb([back]))
-    rows = chunks([btn(day_label(d), Bk(step="time", s=c.s, m=c.m, d=to_d(d), r=c.r)) for d in open_], 3)
-    await edit(cb, f"<b>{esc(svc.title)}</b>\nВыберите день:", kb(*rows, [back]))
+    near = open_[:settings.chat_days]
+    rows = chunks([btn(day_label(d), Bk(step="time", s=c.s, m=c.m, d=to_d(d), r=c.r)) for d in near], 3)
+    # Дальние даты — в календаре: перенос там же, через «Мои записи»
+    later = calendar_btn("🗓 Позже — в календаре") if len(open_) > len(near) and not c.r else []
+    await edit(cb, f"<b>{esc(svc.title)}</b>\nВыберите день:", kb(*rows, later, [back]))
 
 
 @router.callback_query(Bk.filter(F.step == "time"))
@@ -290,12 +301,8 @@ async def confirm(cb: CallbackQuery, callback_data: Bk, session: AsyncSession, b
         return await edit(cb, esc(e), kb([btn("« Другое время", Bk(step="time", s=c.s, m=c.m, d=c.d, r=c.r))],
                                          [btn("« В меню", "menu")]))
     await state.clear()
-    head = "Запись перенесена" if c.r else "Вы записаны"
-    soon = settings.remind_soon_hours
-    await edit(cb, f"✅ {head}!\n\n{booking_card(b)}\n\n{esc(settings.shop_address)}\n"
-                   f"Напомню за день и за {soon} {plural(soon, 'час', 'часа', 'часов')}.")
-    what = f"Перенос записи #{c.r} -> #{b.id}" if c.r else f"Новая запись #{b.id}"
-    await notify_admins(bot, f"{what}\n\n{booking_card(b)}\nКлиент: {esc(b.client_name)}, {esc(b.phone)}")
+    await edit(cb, booked_text(b, moved=bool(c.r)))
+    await notify_admins(bot, admin_booked_text(b, c.r or None))
 
 
 async def my_screen(session, user_id: int) -> tuple[str, InlineKeyboardMarkup]:
@@ -330,8 +337,7 @@ async def cancel_yes(cb: CallbackQuery, callback_data: My, session: AsyncSession
     except repo.BookingError as e:
         return await edit(cb, esc(e), kb([btn("« Мои записи", "my")]))
     await edit(cb, "Запись отменена.")
-    await notify_admins(bot, f"Клиент отменил запись #{b.id}\n\n{booking_card(b)}\n"
-                             f"Клиент: {esc(b.client_name)}, {esc(b.phone)}")
+    await notify_admins(bot, admin_cancelled_text(b))
 
 
 @router.message(Command("menu"))

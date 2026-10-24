@@ -1,12 +1,14 @@
-"""Режим хостинга: webhook Telegram и сайт салона в одном aiohttp-процессе."""
+"""Режим хостинга: webhook Telegram, сайт салона и Mini App в одном aiohttp-процессе."""
 import logging
 import re
 from pathlib import Path
 
 from aiogram import Bot, Dispatcher
+from aiogram.types import MenuButtonWebApp, WebAppInfo
 from aiogram.webhook.aiohttp_server import SimpleRequestHandler
 from aiohttp import web
 
+from bot import webapp
 from bot.config import settings
 
 log = logging.getLogger(__name__)
@@ -29,7 +31,9 @@ async def headers(request: web.Request, handler):
     resp = await handler(request)
     resp.headers.setdefault("X-Content-Type-Options", "nosniff")
     resp.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
-    resp.headers.setdefault("X-Frame-Options", "DENY")
+    # Mini App открывается во фрейме Telegram Web — ему разрешение даёт CSP, а DENY бы перебил
+    if not request.path.startswith("/app"):
+        resp.headers.setdefault("X-Frame-Options", "DENY")
     return resp
 
 
@@ -57,10 +61,13 @@ async def healthz(_: web.Request) -> web.Response:
 
 def build_app(bot: Bot, dp: Dispatcher) -> web.Application:
     app = web.Application(middlewares=[headers])
-    # Наружу только страница и картинки: build.py, шаблоны и тёмный v1 из site/ не отдаются
+    app["bot"] = bot
+    # Из site/ наружу только страница и картинки: build.py, шаблоны и тёмный v1 не отдаются.
+    # Mini App — свои маршруты /app и /api, тоже по белому списку
     app.router.add_get("/", index)
     app.router.add_get("/healthz", healthz)
     app.router.add_get("/img/{name}", image)
+    webapp.register(app)
     SimpleRequestHandler(dp, bot, secret_token=settings.webhook_secret).register(app, settings.webhook_path)
     return app
 
@@ -74,6 +81,9 @@ async def run(bot: Bot, dp: Dispatcher) -> None:
                           secret_token=settings.webhook_secret,
                           allowed_updates=dp.resolve_used_update_types())
     log.info("Режим webhook: %s/tg/***", settings.public_url)
+    # Кнопка слева от поля ввода: календарь под рукой в любом месте переписки
+    await bot.set_chat_menu_button(menu_button=MenuButtonWebApp(
+        text="Записаться", web_app=WebAppInfo(url=settings.webapp_url)))
     runner = web.AppRunner(build_app(bot, dp), access_log=None)
     await runner.setup()
     await web.TCPSite(runner, settings.web_host, settings.web_port).start()

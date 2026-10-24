@@ -24,11 +24,14 @@ class Settings(BaseSettings):
     slot_step_minutes: int = 30
     # Ближе этого к «сейчас» записаться нельзя: мастер должен успеть увидеть запись
     lead_minutes: int = 60
-    days_ahead: int = 7
+    # Окно записи. Календарь Mini App показывает его целиком, а в чате кнопками —
+    # только ближайшие chat_days свободных дней: 21 кнопка в сообщении не читается
+    days_ahead: int = 21
+    chat_days: int = 7
     # Позже — только через администратора: слот уже никто не займёт
     cancel_hours: int = 3
     # Потолок будущих записей на одного человека. Без него один аккаунт
-    # забивает сетку всем мастерам на неделю вперёд за пару минут.
+    # забивает сетку всем мастерам на всё окно записи за пару минут.
     max_active_per_user: int = 3
 
     remind_day_hours: int = 24
@@ -47,6 +50,11 @@ class Settings(BaseSettings):
     def public_url(self) -> str:
         # RENDER_EXTERNAL_URL платформа подставляет сама — домен не дублируется руками
         return (self.public_url_override or os.environ.get("RENDER_EXTERNAL_URL", "")).rstrip("/")
+
+    @property
+    def webapp_url(self) -> str:
+        # Telegram открывает Mini App только по https; без него кнопок календаря нет
+        return self.public_url + "/app" if self.public_url.startswith("https://") else ""
 
     @property
     def webhook_path(self) -> str:
