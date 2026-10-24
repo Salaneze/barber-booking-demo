@@ -75,18 +75,20 @@ h2 { font-size: clamp(36px, 5vw, 56px); line-height: 1.1; }
 .top nav a:hover { color: var(--text); }
 
 .hero { position: relative; min-height: min(92svh, 860px); display: grid; align-items: end; overflow: hidden; }
-.hero-photo { position: absolute; inset: 0; background: var(--surface); }
-.hero-photo img { width: 100%; height: 100%; object-fit: cover; object-position: 30% center; }
-/* Правая треть снимка и так тёмная; градиент добирает контраст под текст */
+/* Фото только слева: рука с бритвой доходит до середины кадра и под текстом
+   спорила бы с заголовком. Правый край растворяется в фоне страницы. */
+.hero-photo { position: absolute; inset: 0 38% 0 0; background: var(--surface); }
+.hero-photo img { width: 100%; height: 100%; object-fit: cover; object-position: 20% center; }
 .hero-photo::after {
   content: ""; position: absolute; inset: 0;
-  background: linear-gradient(90deg, rgb(20 19 18 / 0) 25%, rgb(20 19 18 / .85) 65%, var(--bg) 100%),
-              linear-gradient(0deg, var(--bg) 0, rgb(20 19 18 / 0) 35%);
+  background: linear-gradient(90deg, rgb(20 19 18 / 0) 55%, var(--bg) 100%),
+              linear-gradient(180deg, rgb(20 19 18 / .7) 0, rgb(20 19 18 / 0) 22%),
+              linear-gradient(0deg, var(--bg) 0, rgb(20 19 18 / 0) 30%);
 }
 .hero-body { position: relative; z-index: 1; padding-block: 160px 96px; }
-.hero-text { margin-left: auto; max-width: 560px; }
+.hero-text { margin-left: auto; max-width: min(520px, 36vw); }
 .hero h1 { font-size: clamp(48px, 7vw, 88px); line-height: 1.02; letter-spacing: -.02em; }
-.hero h1 em { color: var(--brass); }
+.hero h1 em { color: var(--brass); white-space: nowrap; }
 .hero .lead { color: #c9c1b4; font-size: 18px; }
 .hero-cta { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 40px; }
 .hero-facts { display: flex; flex-wrap: wrap; gap: 8px 24px; margin: 32px 0 0; padding: 0; list-style: none; font-size: 14px; color: var(--muted); }
@@ -189,6 +191,10 @@ footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; g
 @media (max-width: 900px) {
   :root { --section: 80px; }
   .top nav { display: none; }
+  /* Узко делить экран пополам нельзя: фото на всю ширину, текст поверх нижней тёмной части */
+  .hero-photo { inset: 0; }
+  .hero-photo::after { background: linear-gradient(180deg, rgb(20 19 18 / .6) 0, rgb(20 19 18 / 0) 25%, rgb(20 19 18 / .3) 45%, var(--bg) 85%); }
+  .hero-text { max-width: 560px; margin-left: 0; }
   .head, .feature, .visit-grid { grid-template-columns: 1fr; }
   .head { margin-bottom: 40px; }
   .feature-photo { min-height: 0; aspect-ratio: 3 / 2; }
@@ -202,6 +208,7 @@ footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; g
   body { font-size: 16px; }
   .hero { min-height: 0; align-items: stretch; }
   .hero-photo { position: relative; aspect-ratio: 4 / 5; inset: auto; }
+  .hero-photo img { object-position: 35% center; }
   .hero-photo::after { background: linear-gradient(0deg, var(--bg) 0, rgb(20 19 18 / 0) 45%); }
   .hero { display: block; }
   .hero-body { padding-block: 0 64px; margin-top: -96px; }
@@ -227,7 +234,7 @@ footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; g
     </nav>
     <a class="btn btn-ghost" href="https://t.me/britvaa_demo_bot">Записаться</a>
   </div>
-  <div class="hero-photo"><div class="ph">фото · Кресло и зеркало в зале барбершопа</div></div>
+  <div class="hero-photo"><img src="img/hero.jpg" alt="Кресло и зеркало в зале барбершопа" width="1600" height="900" fetchpriority="high" decoding="async"></div>
   <div class="wrap hero-body">
     <div class="hero-text">
       <p class="kicker">Барбершоп · Москва</p>
@@ -268,7 +275,7 @@ footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; g
 </section>
 
 <div class="feature">
-  <div class="feature-photo"><div class="ph">фото · Королевское бритьё опасной бритвой</div></div>
+  <div class="feature-photo"><img src="img/detail-shave.jpg" alt="Королевское бритьё опасной бритвой" width="1500" height="1000" loading="lazy" decoding="async"></div>
   <div class="feature-body">
     <hr class="blade">
     <h2>Королевское бритьё</h2>
@@ -289,19 +296,19 @@ footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; g
     </div>
     <div class="masters">
       <article class="master">
-        <figure><div class="ph">фото · Барбер Артём</div></figure>
+        <figure><img src="img/master-artem.jpg" alt="Барбер Артём" width="800" height="1000" loading="lazy" decoding="async"></figure>
         <h3>Артём</h3>
         <p>Старший барбер, 8 лет. Классика и бритьё опасной бритвой</p>
         <ul aria-label="Услуги мастера"><li>Мужская стрижка</li><li>Стрижка машинкой</li><li>Борода и усы</li><li>Стрижка + борода</li><li>Королевское бритьё</li></ul>
       </article>
       <article class="master">
-        <figure><div class="ph">фото · Барбер Игорь</div></figure>
+        <figure><img src="img/master-igor.jpg" alt="Барбер Игорь" width="800" height="1000" loading="lazy" decoding="async"></figure>
         <h3>Игорь</h3>
         <p>Фейды и короткие стрижки</p>
         <ul aria-label="Услуги мастера"><li>Мужская стрижка</li><li>Стрижка машинкой</li><li>Борода и усы</li><li>Стрижка + борода</li><li>Детская стрижка</li></ul>
       </article>
       <article class="master">
-        <figure><div class="ph">фото · Барбер Даша</div></figure>
+        <figure><img src="img/master-dasha.jpg" alt="Барбер Даша" width="800" height="1000" loading="lazy" decoding="async"></figure>
         <h3>Даша</h3>
         <p>Длинные мужские стрижки и детские</p>
         <ul aria-label="Услуги мастера"><li>Мужская стрижка</li><li>Стрижка машинкой</li><li>Детская стрижка</li></ul>

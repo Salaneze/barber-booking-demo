@@ -6,4 +6,6 @@ __pycache__/
 CLAUDE.md
 .claude/
 DESIGN.md
+# Исходники из Gemini по 6 МБ; на сайт идут сжатые .jpg из site/compress.py
+site/img/*.png
 *.log
