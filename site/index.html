@@ -242,7 +242,6 @@ footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; g
 
 /* ---------- появление при скролле: строки прайса, плитки, заголовки ---------- */
 .js [data-reveal] { opacity: 0; transform: translateY(32px); transition: opacity .6s var(--ease), transform .8s var(--ease); transition-delay: calc(var(--i, 0) * 70ms); }
-.js .menu [data-reveal] { transform: translateX(-48px); }
 .js [data-reveal].in { opacity: 1; transform: none; }
 .js h2[data-reveal] { clip-path: inset(0 0 100% 0); opacity: 1; transform: translateY(24px); transition: clip-path .9s var(--ease), transform .9s var(--ease); }
 .js h2[data-reveal].in { clip-path: inset(0 0 -10% 0); transform: none; }
@@ -561,11 +560,8 @@ footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; g
 (() => {
   const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-  // Строки прайса размечаются здесь, а не в build.py: разметка MENU общая с v1
-  document.querySelectorAll(".menu li").forEach((li, i) => {
-    li.setAttribute("data-reveal", "");
-    li.style.setProperty("--i", i);
-  });
+  // Прайс не выезжает: это основной контент, а NN/g прямо пишет, что анимации
+  // появления — для вторичного. Двигаются только заголовки и плитки галереи
   const seen = new IntersectionObserver((entries) => {
     for (const e of entries) {
       if (!e.isIntersecting) continue;
