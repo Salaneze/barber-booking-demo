@@ -239,6 +239,24 @@ footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; g
 
 .ph { display: grid; place-items: center; width: 100%; height: 100%; color: var(--ink-2); font-size: 13px; letter-spacing: .14em; text-transform: uppercase; border: 1px dashed var(--line); }
 
+/* ---------- фото на весь экран ---------- */
+.js .zoomable { cursor: zoom-in; }
+.lightbox {
+  border: 0; padding: 0; margin: 0; width: 100%; height: 100%; max-width: none; max-height: none;
+  background: rgb(22 20 18 / .94); color: var(--on-ink);
+}
+.lightbox[open] { display: grid; grid-template-rows: 1fr auto; place-items: center; }
+.lightbox::backdrop { background: transparent; }
+/* showModal не держит прокрутку страницы под собой, на телефоне фон уезжает */
+html:has(.lightbox[open]) { overflow: hidden; }
+.lightbox img { max-width: calc(100vw - 2 * var(--gutter)); max-height: calc(100dvh - 140px); width: auto; height: auto; object-fit: contain; }
+.lightbox-bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 12px 24px; padding: 16px var(--gutter) 24px; text-align: center; }
+.lightbox-bar .btn[hidden] { display: none; }
+.lightbox-close {
+  position: absolute; top: 12px; right: 12px; width: 48px; height: 48px; border: 0; border-radius: 50%;
+  background: rgb(255 255 255 / .12); color: inherit; font-size: 28px; line-height: 1; cursor: pointer;
+}
+
 /* ---------- появление при скролле: строки прайса, плитки, заголовки ---------- */
 .js [data-reveal] { opacity: 0; transform: translateY(32px); transition: opacity .6s var(--ease), transform .8s var(--ease); transition-delay: calc(var(--i, 0) * 70ms); }
 .js [data-reveal].in { opacity: 1; transform: none; }
@@ -282,7 +300,11 @@ footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; g
   body { font-size: 16px; }
   /* Узко шапке нечего показать: слово и есть логотип, запись — в нижней кнопке */
   .top { display: none; }
-  .word { padding-top: 24px; }
+  /* Высота строки .78 короче самих букв: в Chrome верх «БРИТВЫ» стоял в 2px от края,
+     а браузер телефона с другими метриками шрифта его срезал. Отступ под фото
+     ужат на те же 16px, чтобы кнопка записи осталась на первом экране */
+  .word { padding-top: 40px; }
+  .hero-body { margin-top: 24px; }
   .hero { padding-bottom: 64px; }
   /* Квадрат, а не 4:5: иначе кнопка записи уходит под первый экран 375×812 */
   .hero-photo { aspect-ratio: 1; margin-top: 3vw; }
@@ -472,6 +494,15 @@ footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; g
 <div class="dock" data-hidden>
   <a class="btn" href="{{BOT_URL}}">Записаться в Телеграме <span aria-hidden="true">→</span></a>
 </div>
+
+<dialog class="lightbox" aria-label="Фото">
+  <button class="lightbox-close" type="button" aria-label="Закрыть">×</button>
+  <img alt="">
+  <div class="lightbox-bar">
+    <span class="lightbox-cap"></span>
+    <a class="btn" hidden>Записаться <span aria-hidden="true">→</span></a>
+  </div>
+</dialog>
 <script>
 (() => {
   const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -486,6 +517,38 @@ footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; g
     }
   }, { rootMargin: "0px 0px -12% 0px" });
   document.querySelectorAll("[data-reveal]").forEach((el) => seen.observe(el));
+
+  // Галерея на сайте в растре из точек, цвет проявляется только под мышью —
+  // на телефоне его не увидеть иначе, чем открыв фото
+  const box = document.querySelector(".lightbox");
+  if (box && box.showModal) {
+    const big = box.querySelector("img");
+    const cap = box.querySelector(".lightbox-cap");
+    const go = box.querySelector(".lightbox-bar .btn");
+    const open = (src, alt, text, href) => {
+      big.src = src;
+      big.alt = alt;
+      cap.textContent = text;
+      go.hidden = !href;
+      if (href) go.href = href;
+      box.showModal();
+    };
+    document.querySelectorAll(".cut-img").forEach((el) => {
+      const [dots, color] = el.querySelectorAll("img");
+      const cut = el.closest(".cut");
+      el.classList.add("zoomable");
+      el.addEventListener("click", (e) => {
+        // Подпись под плиткой по-прежнему ведёт в бота, фото — только смотреть
+        e.preventDefault();
+        open((color || dots).src, dots.alt, cut.querySelector(".cut-cap b").textContent, cut.href);
+      });
+    });
+    document.querySelectorAll(".master figure img, .hero-photo img, .feature-photo img").forEach((el) => {
+      el.classList.add("zoomable");
+      el.addEventListener("click", () => open(el.src, el.alt, el.alt, ""));
+    });
+    box.addEventListener("click", (e) => { if (!e.target.closest(".lightbox-bar .btn")) box.close(); });
+  }
 
   const photo = document.querySelector(".hero-photo");
   const img = photo && photo.querySelector("img");
@@ -514,7 +577,11 @@ footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; g
       const shift = off * Number(el.dataset.speed);
       el.style.transform = `translate3d(0, ${shift.toFixed(1)}px, 0)`;
     }
-    if (dock && cta) dock.toggleAttribute("data-hidden", cta.getBoundingClientRect().bottom > 0);
+    // Выехала один раз — дальше стоит: прятать и выдвигать заново на каждом
+    // возврате к первому экрану мельтешит (замечание с живого телефона 24.10)
+    if (dock && cta && dock.hasAttribute("data-hidden") && cta.getBoundingClientRect().bottom <= 0) {
+      dock.removeAttribute("data-hidden");
+    }
   };
   addEventListener("scroll", () => {
     if (!queued) { queued = true; requestAnimationFrame(frame); }
