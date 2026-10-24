@@ -5,6 +5,8 @@ services:
     name: britva-barber
     runtime: python
     plan: free
+    # База на Neon в us-east-2 — сервис рядом с ней, иначе каждый запрос летит через весь континент
+    region: ohio
     buildCommand: pip install -r requirements.txt
     startCommand: python -m bot
     healthCheckPath: /healthz
