@@ -38,6 +38,8 @@ async def main():
         check("главная 200", r.status == 200, r.status)
         check("главная — это v2", 'class="word"' in html)
         check("CSP на странице", "frame-ancestors 'none'" in r.headers.get("Content-Security-Policy", ""))
+        # Копия для GitHub Pages: там заголовков нет, работает только meta
+        check("CSP в meta", 'http-equiv="Content-Security-Policy"' in html and "connect-src 'none'" in html)
         check("nosniff", r.headers.get("X-Content-Type-Options") == "nosniff")
 
         r = await client.get("/img/hero.jpg")

@@ -22,6 +22,7 @@ os.chdir(ROOT)
 from bot.config import settings  # noqa: E402
 from bot.plural import plural as word_for  # noqa: E402
 from bot.seed import MASTERS, SERVICES  # noqa: E402
+from bot.web import CSP  # noqa: E402
 
 DAYS = ["Пн", "Вт", "Ср", "Чт", "Пт", "Сб", "Вс"]
 # Сущностью, а не символом: литерал U+00A0 в диффе невидим
@@ -224,6 +225,12 @@ def build(bot: str, city: str, template: str = "template.html") -> str:
     values.update(v2_values(bot))
     html = (SITE / template).read_text(encoding="utf-8")
     html = re.sub(r"\{\{(\w+)\}\}", lambda mt: values[mt.group(1)], html)
+    # GitHub Pages заголовков не ставит, поэтому та же политика едет в meta.
+    # frame-ancestors в meta браузер игнорирует — от встраивания в чужой фрейм
+    # там защиты нет, для витрины без форм это приемлемо
+    meta_csp = "; ".join(p for p in CSP.split("; ") if not p.startswith("frame-ancestors"))
+    html = html.replace('<meta charset="utf-8">',
+                        f'<meta charset="utf-8">\n<meta http-equiv="Content-Security-Policy" content="{meta_csp}">', 1)
     # Пометка строго после doctype: комментарий перед ним включает quirks-режим
     doctype, rest = html.split("\n", 1)
     return f"{doctype}\n<!-- Собрано site/build.py из {template} и bot/seed.py — руками не править -->\n{rest}"

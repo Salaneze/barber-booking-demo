@@ -1,0 +1,38 @@
+# Сайт салона на GitHub Pages: на бесплатном Render он засыпал, и первый
+# посетитель ждал под минуту. Бот остаётся на Render — сайт от него не зависит,
+# кнопки ведут в Telegram.
+name: pages
+
+on:
+  push:
+    branches: [main]
+    paths: ["site/index.html", "site/img/*.jpg", ".github/workflows/pages.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      # Наружу только страница и сжатые jpg: шаблоны и тёмная v1 остаются в репо
+      - run: |
+          mkdir -p _site/img
+          cp site/index.html _site/
+          cp site/img/*.jpg _site/img/
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+      - id: deploy
+        uses: actions/deploy-pages@v4
