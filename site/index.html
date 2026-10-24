@@ -7,6 +7,7 @@
 <title>Бритва — барбершоп, запись в Телеграме</title>
 <meta name="description" content="Мужские стрижки, борода и королевское бритьё. Три мастера, запись в Телеграме за минуту.">
 <meta name="theme-color" content="#141312">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23141312'/%3E%3Ctext x='16' y='24' font-family='Georgia,serif' font-size='22' font-weight='700' fill='%23c9a35b' text-anchor='middle'%3E%D0%91%3C/text%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600&family=Old+Standard+TT:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
@@ -125,11 +126,42 @@ section { padding-block: var(--section); }
 .master ul { list-style: none; margin: 0; padding: 16px 0 0; border-top: 1px solid var(--line); font-size: 14px; color: var(--muted); }
 .master li + li { margin-top: 4px; }
 
-.steps { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 32px; counter-reset: step; }
-.steps li { border-top: 1px solid var(--brass); padding-top: 24px; counter-increment: step; }
-.steps li::before { content: counter(step, upper-roman) "."; font: italic 400 22px/1 var(--serif); color: var(--brass); }
-.steps h3 { font-size: 26px; margin: 16px 0 8px; }
+.how { display: grid; grid-template-columns: 6fr 5fr; gap: 64px; align-items: center; }
+.steps { list-style: none; margin: 48px 0 0; padding: 0; display: grid; gap: 32px; counter-reset: step; }
+.steps li { display: grid; grid-template-columns: 48px 1fr; border-top: 1px solid var(--line); padding-top: 24px; counter-increment: step; }
+.steps li::before { content: counter(step, upper-roman) "."; grid-row: span 2; font: italic 400 22px/1.2 var(--serif); color: var(--brass); }
+.steps h3 { font-size: 26px; margin: 0 0 8px; }
 .steps p { margin: 0; color: var(--muted); font-size: 16px; }
+
+/* Макет переписки: цвета тёмной темы Telegram, а не палитры сайта, — узнаваться должен чат */
+.phone { margin: 0; justify-self: center; width: min(100%, 360px); }
+.chat {
+  border: 1px solid var(--line); border-radius: 28px; padding: 16px 12px 12px;
+  background: #0e1621; font: 400 14px/1.4 system-ui, sans-serif; color: #f5f5f5;
+  box-shadow: 0 40px 80px -30px rgb(0 0 0 / .7);
+}
+.chat-head { display: flex; align-items: center; gap: 10px; padding: 0 4px 12px; border-bottom: 1px solid rgb(255 255 255 / .06); margin-bottom: 12px; }
+.chat-ava { width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; background: var(--brass); color: var(--bg); font: 700 16px/1 var(--serif); }
+.chat-head b { display: block; font-size: 15px; }
+.chat-head small { color: #6d7f8f; font-size: 12px; }
+.msg { background: #182533; border-radius: 12px 12px 12px 4px; padding: 8px 12px; margin: 0 24px 4px 0; white-space: pre-line; }
+.keys { display: grid; gap: 4px; margin: 0 24px 12px 0; }
+.keys div { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 4px; }
+.keys span { background: rgb(24 37 51 / .7); border-radius: 8px; padding: 8px 4px; text-align: center; font-size: 13px; }
+.keys .on { background: #2b5278; }
+.phone figcaption { margin-top: 16px; text-align: center; font-size: 13px; color: var(--muted); }
+
+/* Липкая запись на телефоне: прайс длинный, до кнопки в шапке далеко */
+.dock { display: none; }
+@media (max-width: 600px) {
+  .dock {
+    display: flex; position: fixed; inset: auto 12px 12px; z-index: 5; justify-content: center;
+    transition: transform .25s var(--ease), opacity .25s var(--ease);
+  }
+  .dock .btn { width: 100%; justify-content: center; box-shadow: 0 12px 32px rgb(0 0 0 / .5); }
+  .dock[data-hidden] { transform: translateY(150%); opacity: 0; pointer-events: none; }
+  footer { padding-bottom: 96px; }
+}
 
 .visit { border-top: 1px solid var(--line); }
 .visit-grid { display: grid; grid-template-columns: 5fr 4fr 3fr; gap: 48px; align-items: start; }
@@ -161,7 +193,8 @@ footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; g
   .head { margin-bottom: 40px; }
   .feature-photo { min-height: 0; aspect-ratio: 3 / 2; }
   .feature-body { padding: 56px var(--gutter); }
-  .masters, .steps { grid-template-columns: 1fr; gap: 48px; }
+  .masters { grid-template-columns: 1fr; gap: 48px; }
+  .how { grid-template-columns: 1fr; gap: 56px; }
   .master figure { aspect-ratio: 4 / 5; max-height: 520px; }
   .visit .cta { justify-self: start; }
 }
@@ -278,13 +311,11 @@ footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; g
 </section>
 
 <section id="how">
-  <div class="wrap">
-    <div class="head">
-      <div>
-        <p class="kicker">Запись</p>
-        <h2>Как это устроено</h2>
-      </div>
-    </div>
+  <div class="wrap how">
+    <div>
+      <p class="kicker">Запись в Телеграме</p>
+      <h2>Как это устроено</h2>
+      <p class="lead">Ни приложения, ни регистрации. Бот уже в Телеграме, который стоит у вас в телефоне.</p>
     <ol class="steps">
       <li>
         <h3>Услуга</h3>
@@ -299,6 +330,27 @@ footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; g
         <p>Бот напомнит за сутки и за 2&nbsp;часа. Перенести или отменить можно в том же чате, не позже чем за 3&nbsp;часа.</p>
       </li>
     </ol>
+    </div>
+    <figure class="phone" aria-label="Пример переписки с ботом записи">
+      <div class="chat">
+        <div class="chat-head"><span class="chat-ava">Б</span><div><b>Барбершоп «Бритва»</b><small>бот</small></div></div>
+        <p class="msg"><b>Королевское бритьё</b>
+Выберите день:</p>
+        <div class="keys" aria-hidden="true"><div><span>Пн 26.10</span><span>Вт 27.10</span><span>Ср 28.10</span></div><div><span>Чт 29.10</span><span class="on">Пт 30.10</span><span>Сб 31.10</span></div></div>
+        <p class="msg"><b>Королевское бритьё</b> · Пт 30.10
+Выберите время:</p>
+        <div class="keys" aria-hidden="true"><div><span>17:00</span><span>17:30</span><span>18:00</span><span class="on">18:30</span></div><div><span>19:00</span><span>19:30</span></div></div>
+        <p class="msg">✅ Вы записаны!
+
+<b>Королевское бритьё</b> · 1&nbsp;500&nbsp;₽
+Пт, 30 октября, 18:30
+Мастер: Артём
+
+ул. Демонстрационная, 7
+Напомню за день и за 2&nbsp;часа.</p>
+      </div>
+      <figcaption>Тексты — из настоящего бота, даты для примера</figcaption>
+    </figure>
   </div>
 </section>
 
@@ -325,5 +377,25 @@ footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; g
   </div>
 </footer>
 
+<div class="dock" data-hidden>
+  <a class="btn" href="https://t.me/britvaa_demo_bot">Записаться в Телеграме <span aria-hidden="true">→</span></a>
+</div>
+<script>
+// Пока видна кнопка первого экрана, вторая внизу только дублирует её
+(() => {
+  const dock = document.querySelector(".dock");
+  const hero = document.querySelector(".hero-cta");
+  if (!dock || !hero) return;
+  let queued = false;
+  const update = () => {
+    queued = false;
+    dock.toggleAttribute("data-hidden", hero.getBoundingClientRect().bottom > 0);
+  };
+  addEventListener("scroll", () => {
+    if (!queued) { queued = true; requestAnimationFrame(update); }
+  }, { passive: true });
+  update();
+})();
+</script>
 </body>
 </html>

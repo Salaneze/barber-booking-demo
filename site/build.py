@@ -80,6 +80,34 @@ def img(name: str, alt: str, w: int, h: int, eager: bool = False) -> str:
     return f'<img src="img/{name}" alt="{escape(alt)}" width="{w}" height="{h}" {loading} decoding="async">'
 
 
+def chat(shave: int) -> str:
+    """Макет переписки. Фразы повторяют bot/handlers/client.py дословно."""
+    title, minutes, price = SERVICES[shave]
+    master = next(m[0] for m in MASTERS if shave in m[2])
+    days = ["Пн 26.10", "Вт 27.10", "Ср 28.10", "Чт 29.10", "Пт 30.10", "Сб 31.10"]
+    times = ["17:00", "17:30", "18:00", "18:30", "19:00", "19:30"]
+
+    def keys(rows: list[list[str]], on: str = "") -> str:
+        out = "".join("<div>" + "".join(f'<span class="on">{k}</span>' if k == on else f"<span>{k}</span>"
+                                        for k in r) + "</div>" for r in rows)
+        return f'        <div class="keys" aria-hidden="true">{out}</div>'
+
+    t = escape(title)
+    return "\n".join([
+        '      <div class="chat">',
+        f'        <div class="chat-head"><span class="chat-ava">Б</span><div><b>{escape(settings.shop_name)}</b>'
+        '<small>бот</small></div></div>',
+        f'        <p class="msg"><b>{t}</b>\nВыберите день:</p>',
+        keys([days[:3], days[3:]], on="Пт 30.10"),
+        f'        <p class="msg"><b>{t}</b> · Пт 30.10\nВыберите время:</p>',
+        keys([times[:4], times[4:]], on="18:30"),
+        f'        <p class="msg">✅ Вы записаны!\n\n<b>{t}</b> · {rub(price)}\nПт, 30 октября, 18:30\n'
+        f'Мастер: {escape(master)}\n\n{escape(settings.shop_address)}\n'
+        f'Напомню за день и за {plural(settings.remind_soon_hours, "час", "часа", "часов")}.</p>',
+        '      </div>',
+    ])
+
+
 def build(bot: str, city: str) -> str:
     bot_url = f"https://t.me/{bot}"
     rows = []
@@ -117,6 +145,7 @@ def build(bot: str, city: str) -> str:
         "BOT_URL": bot_url,
         "MENU": "\n".join(rows),
         "MASTERS": "\n".join(masters),
+        "CHAT": chat(shave),
         "SHAVE_URL": service_url(bot, shave),
         "SHAVE_MIN": str(SERVICES[shave][1]),
         "DAYS": plural(settings.days_ahead, "день", "дня", "дней"),
