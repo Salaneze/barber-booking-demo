@@ -15,6 +15,9 @@ class Settings(BaseSettings):
 
     shop_name: str = "Барбершоп «Бритва»"
     shop_address: str = "Адрес не задан"
+    # Сайт салона для кнопки в боте. Пусто — сайт с этого же сервера;
+    # на free-хостинге он просыпается полминуты, поэтому демо смотрит на Pages
+    site_url_override: str = Field(default="", validation_alias="SITE_URL")
     shop_phone: str = ""
     # Расписание мастеров — в местном времени, в базе всё в UTC
     shop_tz: str = "Europe/Moscow"
@@ -50,6 +53,12 @@ class Settings(BaseSettings):
     def public_url(self) -> str:
         # RENDER_EXTERNAL_URL платформа подставляет сама — домен не дублируется руками
         return (self.public_url_override or os.environ.get("RENDER_EXTERNAL_URL", "")).rstrip("/")
+
+    @property
+    def site_url(self) -> str:
+        if self.site_url_override:
+            return self.site_url_override
+        return self.public_url + "/" if self.public_url.startswith("https://") else ""
 
     @property
     def webapp_url(self) -> str:

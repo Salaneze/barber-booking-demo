@@ -16,7 +16,7 @@ from aiogram.filters.callback_data import CallbackData
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.types import (CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup, KeyboardButton,
-                           Message, ReplyKeyboardMarkup, WebAppInfo)
+                           LinkPreviewOptions, Message, ReplyKeyboardMarkup, WebAppInfo)
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from bot.config import settings
@@ -87,8 +87,15 @@ def calendar_btn(text: str = "🗓 Записаться в календаре") 
     return [InlineKeyboardButton(text=text, web_app=WebAppInfo(url=settings.webapp_url))] if settings.webapp_url else []
 
 
+def site_btn() -> list[InlineKeyboardButton]:
+    return [InlineKeyboardButton(text="🌐 Сайт салона", url=settings.site_url)] if settings.site_url else []
+
+
 MENU = kb([btn("✂️ Записаться", "book")], calendar_btn(), [btn("📅 Мои записи", "my")],
-          [btn("📍 Адрес и контакты", "contacts")])
+          [btn("📍 Адрес и контакты", "contacts")], site_btn())
+
+GREETING = ("Стрижка, за которую не стыдно. Три мастера, опасная бритва и горячее полотенце.\n"
+            "Запись — минута, без звонков.")
 
 # Те же три пункта постоянно внизу экрана: меню в сообщении уезжает вверх
 # по переписке, а нижние кнопки на месте, сколько бы ни было сообщений
@@ -117,8 +124,11 @@ async def start(msg: Message, command: CommandObject, session: AsyncSession, sta
             text, markup = await masters_screen(session, Bk(step="mst", s=svc.id))
             await msg.answer(text, reply_markup=markup)
             return
-    await msg.answer(f"<b>{esc(settings.shop_name)}</b>\nЗапись к мастеру за минуту — без звонков.\n"
-                     "Меню — кнопками внизу.", reply_markup=MAIN)
+    # Ссылка на сайт текстом, а не кнопкой: под приветствием уже висит нижнее
+    # меню, а инлайн-кнопки и reply-клавиатуру одно сообщение не несёт
+    site = f'\n<a href="{esc(settings.site_url)}">Цены, мастера и работы — на сайте</a>' if settings.site_url else ""
+    await msg.answer(f"<b>{esc(settings.shop_name)}</b>\n{GREETING}{site}\n\nМеню — кнопками внизу.",
+                     reply_markup=MAIN, link_preview_options=LinkPreviewOptions(is_disabled=True))
 
 
 @router.message(F.text == BOOK)
@@ -135,7 +145,7 @@ async def my_btn(msg: Message, session: AsyncSession, state: FSMContext) -> None
 
 @router.message(F.text == ADDR)
 async def addr_btn(msg: Message) -> None:
-    await msg.answer(contacts_text())
+    await msg.answer(contacts_text(), reply_markup=kb(site_btn()) if site_btn() else None)
 
 
 def contacts_text() -> str:
@@ -146,12 +156,12 @@ def contacts_text() -> str:
 @router.callback_query(F.data == "menu")
 async def menu(cb: CallbackQuery, state: FSMContext) -> None:
     await state.clear()
-    await edit(cb, f"<b>{esc(settings.shop_name)}</b>\nЗапись к мастеру за минуту — без звонков.", MENU)
+    await edit(cb, f"<b>{esc(settings.shop_name)}</b>\n{GREETING}", MENU)
 
 
 @router.callback_query(F.data == "contacts")
 async def contacts(cb: CallbackQuery) -> None:
-    await edit(cb, contacts_text(), kb([btn("« В меню", "menu")]))
+    await edit(cb, contacts_text(), kb(site_btn(), [btn("« В меню", "menu")]))
 
 
 async def services_kb(session) -> InlineKeyboardMarkup:

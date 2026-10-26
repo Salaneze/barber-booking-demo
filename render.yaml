@@ -30,3 +30,6 @@ services:
         value: ул. Демонстрационная, 7
       - key: SHOP_TZ
         value: Europe/Moscow
+      # Кнопка «Сайт салона» ведёт на Pages: сайт с Render просыпается полминуты
+      - key: SITE_URL
+        value: https://salaneze.github.io/barber-booking-demo/

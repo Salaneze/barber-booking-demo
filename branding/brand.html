@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="ru"><head><meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@500;600&family=Old+Standard+TT:ital@1&family=Oswald:wght@700&display=block" rel="stylesheet">
+<style>
+:root { --paper:#efe7d8; --ink:#161412; --ink2:#4a443c; --cin:#c23b22; }
+* { margin:0; box-sizing:border-box; }
+body { background:#888; }
+.card { position:relative; overflow:hidden; background:var(--paper); }
+
+/* аватар: Telegram режет круг, всё важное в центре */
+#avatar { width:640px; height:640px; display:grid; place-items:center; }
+#avatar .b { font:700 470px/1 "Oswald"; color:var(--ink); transform:translateY(-14px); letter-spacing:0; }
+#avatar .dot { position:absolute; width:56px; height:56px; border-radius:50%; background:var(--cin);
+  left:calc(50% + 118px); top:calc(50% + 132px); }
+
+/* картинка описания 640x360: фото сверху, слово во всю ширину снизу, как на сайте */
+#desc { width:640px; height:360px; }
+#desc .photo { height:150px; background:url("PHOTO") center 42%/cover; }
+#desc .band { position:absolute; left:0; right:0; bottom:0; height:210px; padding:14px 22px 0; }
+#desc .kicker { font:600 12px/1 "Golos Text"; letter-spacing:.16em; text-transform:uppercase; color:var(--ink);
+  display:flex; align-items:center; gap:10px; }
+#desc .kicker::before { content:""; width:8px; height:8px; border-radius:50%; background:var(--cin); }
+#desc .kicker span { margin-left:auto; color:var(--ink2); letter-spacing:.08em; }
+#desc .word { display:inline-block; font:700 128px/.8 "Oswald"; color:var(--ink); text-transform:uppercase;
+  white-space:nowrap; letter-spacing:.01em; margin-top:14px; }
+</style></head>
+<body>
+<div class="card" id="avatar"><div class="b">Б</div><div class="dot"></div></div>
+<div class="card" id="desc">
+  <div class="photo"></div>
+  <div class="band">
+    <div class="kicker">Барбершоп · запись в Telegram<span>без звонков</span></div>
+    <div class="word" id="word">Бритва</div>
+  </div>
+</div>
+<script>
+// слово растягиваем ровно на ширину полосы, как на сайте
+document.fonts.ready.then(() => {
+  const w = document.getElementById('word'), box = w.parentElement;
+  const avail = box.clientWidth - 44;
+  w.style.fontSize = (128 * avail / w.getBoundingClientRect().width) + 'px';
+  document.body.dataset.ready = '1';
+});
+</script>
+</body></html>
