@@ -278,8 +278,22 @@ function switchTab(tab) {
 }
 document.querySelectorAll(".tab").forEach((t) => t.addEventListener("click", () => switchTab(t.dataset.tab)));
 
+// Схему берём у клиента Telegram, цвета — свои. Шапку и низ окна красим
+// сами, иначе над бумажным фоном висит полоса из темы пользователя
+function applyTheme() {
+  const dark = tg && tg.colorScheme ? tg.colorScheme === "dark" : matchMedia("(prefers-color-scheme: dark)").matches;
+  document.documentElement.dataset.theme = dark ? "dark" : "light";
+  if (!tg) return;
+  const bg = getComputedStyle(document.documentElement).getPropertyValue("--bg").trim();
+  try {
+    if (tg.isVersionAtLeast("6.1")) { tg.setHeaderColor(bg); tg.setBackgroundColor(bg); }
+    if (tg.isVersionAtLeast("7.10")) tg.setBottomBarColor(bg);
+  } catch (_) { /* старый клиент: останутся цвета его темы, вёрстка не страдает */ }
+}
+
 async function boot() {
-  if (tg) { tg.ready(); tg.expand(); }
+  applyTheme();
+  if (tg) { tg.onEvent("themeChanged", applyTheme); tg.ready(); tg.expand(); }
   if (!inTg) {
     document.querySelector(".top").hidden = true;
     view.innerHTML = `<div class="empty"><h1>Запись открывается в Telegram</h1><p>Откройте бота и нажмите «Записаться» слева от поля ввода.</p></div>`;

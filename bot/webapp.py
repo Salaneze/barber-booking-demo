@@ -31,8 +31,10 @@ FRONT = Path(__file__).resolve().parent.parent / "webapp"
 ASSETS = {"app.js": "application/javascript", "app.css": "text/css"}
 
 # Telegram Web (web.telegram.org) открывает Mini App во фрейме — ему встраивать
-# можно, остальным нет. Скрипт SDK — с telegram.org, запросы — только к себе
-CSP = ("default-src 'self'; script-src 'self' https://telegram.org; style-src 'self'; "
+# можно, остальным нет. Скрипт SDK — с telegram.org, шрифты сайта — с Google
+# Fonts, запросы — только к себе
+CSP = ("default-src 'self'; script-src 'self' https://telegram.org; "
+       "style-src 'self' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; "
        "img-src 'self' data:; connect-src 'self'; frame-ancestors https://web.telegram.org; "
        "base-uri 'none'; form-action 'none'")
 
