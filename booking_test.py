@@ -4,19 +4,34 @@
 """
 import asyncio
 import os
+import re
 import sys
 from datetime import date, datetime, timedelta
 from pathlib import Path
+from urllib.parse import urlsplit
 from zoneinfo import ZoneInfo
 
 sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 DB = Path(__file__).with_name("booking_test.db")
-DB.unlink(missing_ok=True)
+PG_URL = os.environ.get("BRITVA_TEST_POSTGRES_URL")
+if PG_URL is not None:
+    try:
+        parts = urlsplit(PG_URL)
+        valid = (parts.scheme == "postgresql" and parts.hostname in ("127.0.0.1", "::1")
+                 and parts.port is not None and not parts.query and not parts.fragment
+                 and re.fullmatch(r"/britva_test_[a-z0-9_]+", parts.path))
+    except ValueError:
+        valid = False
+    if not valid:
+        raise SystemExit("Test PostgreSQL URL must use a numeric loopback host, explicit port, "
+                         "and britva_test_<suffix> database; query parameters are forbidden")
+else:
+    DB.unlink(missing_ok=True)
 os.environ["BOT_TOKEN"] = "123456:TEST-TOKEN-NOT-REAL"
-os.environ["DB_URL"] = f"sqlite+aiosqlite:///{DB.name}"
+os.environ["DB_URL"] = PG_URL or f"sqlite+aiosqlite:///{DB.name}"
 os.environ["SHOP_TZ"] = "Europe/Moscow"
 
-from sqlalchemy import select  # noqa: E402
+from sqlalchemy import select, text  # noqa: E402
 
 from bot.db import repo  # noqa: E402
 from bot.db.base import engine, init_db, session_factory  # noqa: E402
@@ -66,6 +81,16 @@ def slots_pure():
 
 
 async def setup():
+    if PG_URL is not None:
+        async with engine.connect() as conn:
+            objects = await conn.scalar(text("""
+                SELECT count(*) FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace
+                WHERE n.nspname NOT IN ('pg_catalog', 'information_schema')
+                  AND n.nspname NOT LIKE 'pg_toast%'
+                  AND c.relkind IN ('r', 'p', 'v', 'm', 'S', 'f')
+            """))
+            if objects:
+                raise RuntimeError("Refusing to use a PostgreSQL database containing user objects")
     await init_db()
     async with session_factory() as s:
         await seed_if_empty(s)
@@ -209,10 +234,100 @@ async def main():
     slots_pure()
     await setup()
     await repo_tests()
+    await concurrency_regressions()
     await engine.dispose()
-    DB.unlink(missing_ok=True)
+    if PG_URL is None:
+        DB.unlink(missing_ok=True)
     print(f"OK: {OK}   FAIL: {FAIL}")
     sys.exit(1 if FAIL else 0)
+
+
+async def concurrency_regressions():
+    d, _ = monday_10()
+    d += timedelta(days=7)
+    now = local_to_utc(d - timedelta(days=2), 540, MSK)
+    async with session_factory() as s:
+        master = await s.scalar(select(Master).where(Master.name == "Артём"))
+        service = await s.scalar(select(Service).where(Service.title == "Мужская стрижка"))
+        mid, sid = master.id, service.id
+        original = await repo.create_booking(s, user_id=991, name="move", phone="+7", service_id=sid,
+                                             master_id=mid, starts_at=local_to_utc(d, 600, MSK), now=now)
+        oid = original.id
+        try:
+            await repo.create_booking(s, user_id=991, name="move", phone="+7", service_id=sid,
+                                      master_id=mid, starts_at=local_to_utc(d, 601, MSK), now=now, replace_id=oid)
+            check("неудачный перенос отклонён", False)
+        except repo.BookingError:
+            check("неудачный перенос сохраняет исходную запись", (await s.get(Booking, oid)).status == "active")
+
+    async def move(minute):
+        async with session_factory() as s:
+            try:
+                return await repo.create_booking(s, user_id=991, name="move", phone="+7", service_id=sid,
+                                                 master_id=mid, starts_at=local_to_utc(d, minute, MSK),
+                                                 now=now, replace_id=oid)
+            except repo.BookingError as e:
+                return e
+
+    results = await asyncio.gather(move(720), move(840))
+    check("два переноса: один успех", sum(isinstance(x, Booking) for x in results) == 1, results)
+    check("два переноса: один отказ", sum(isinstance(x, repo.BookingError) for x in results) == 1, results)
+    async with session_factory() as s:
+        successors = await repo.user_bookings(s, 991, now)
+        check("два переноса: один активный преемник", len(successors) == 1)
+        if not successors:
+            return
+        successor_id = successors[0].id
+
+    async def cancel_as(role):
+        async with session_factory() as s:
+            try:
+                if role == "client":
+                    await repo.cancel_by_client(s, successor_id, 991, now)
+                else:
+                    await repo.cancel_by_admin(s, successor_id)
+                return role
+            except repo.BookingError:
+                return None
+
+    winners = [role for role in await asyncio.gather(cancel_as("client"), cancel_as("admin")) if role]
+    check("двойная отмена: ровно одна успешная", len(winners) == 1, winners)
+    async with session_factory() as s:
+        final = await s.get(Booking, successor_id)
+        check("двойная отмена: сохранён автор первой отмены",
+              final.status == "cancelled" and winners == [final.cancelled_by])
+
+    off_day = d + timedelta(days=1)
+    async with session_factory() as s:
+        master = await s.get(Master, mid)
+        service = await s.get(Service, sid)
+        check("гонка с выходным: время до начала свободно",
+              local_to_utc(off_day, 600, MSK) in await repo.slots_for(s, master, service, off_day, now))
+
+    async def book_for_off():
+        async with session_factory() as s:
+            try:
+                return await repo.create_booking(s, user_id=992, name="off", phone="+7", service_id=sid,
+                                                 master_id=mid, starts_at=local_to_utc(off_day, 600, MSK), now=now)
+            except repo.BookingError as e:
+                return e
+
+    async def set_off():
+        async with session_factory() as s:
+            try:
+                return await repo.toggle_day_off(s, mid, off_day)
+            except repo.BookingError as e:
+                return e
+
+    book_result, off_result = await asyncio.gather(book_for_off(), set_off())
+    check("запись и выходной: ровно один успех",
+          (isinstance(book_result, Booking) and isinstance(off_result, repo.BookingError)) or
+          (isinstance(book_result, repo.BookingError) and off_result is True), (book_result, off_result))
+    async with session_factory() as s:
+        from bot.db.models import DayOff
+        off = await s.scalar(select(DayOff).where(DayOff.master_id == mid, DayOff.day == off_day))
+        bookings = [b for b in await repo.day_schedule(s, off_day) if b.master_id == mid]
+        check("выходной и активная запись не сосуществуют", not (off and bookings))
 
 
 asyncio.run(main())
