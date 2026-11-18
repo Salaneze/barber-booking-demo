@@ -109,6 +109,8 @@ async def offs_master(cb: CallbackQuery, callback_data: Adm, session: AsyncSessi
             note = f"\n{day_label(from_d(callback_data.d))}: {'выходной' if off else 'рабочий'}."
         except repo.BookingError as e:
             note = f"\n⚠️ {esc(e)}"
+            # rollback в репозитории сбрасывает загруженные атрибуты ORM.
+            await session.refresh(m, ["id", "name", "hours"])
     today = repo.local_day(utcnow())
     days = [today + timedelta(days=i) for i in range(14)]
     offs_ = set(await session.scalars(select(DayOff.day).where(DayOff.master_id == m.id, DayOff.day >= today)))

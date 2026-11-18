@@ -160,6 +160,18 @@ async def create_booking(session: AsyncSession, *, user_id: int, name: str, phon
     # Окно записи проверяем здесь: подделанная кнопка иначе бронирует на год вперёд
     if not local_day(now) <= local_day(starts_at) < local_day(now) + timedelta(days=settings.days_ahead):
         raise BookingError("На это время запись не открыта.")
+    if old:
+        # Сначала захватываем исходную запись, затем мастеров назначения.
+        # Условное обновление разделяет конкурирующие переносы и отмены.
+        claimed = await session.execute(update(Booking).where(
+            Booking.id == old.id, Booking.user_id == user_id,
+            Booking.status == BookingStatus.ACTIVE,
+            Booking.starts_at > now,
+            Booking.starts_at >= now + timedelta(hours=settings.cancel_hours),
+        ).values(status=BookingStatus.CANCELLED, cancelled_by="client"))
+        if claimed.rowcount != 1:
+            await session.rollback()
+            raise BookingError("Эта запись уже неактивна.")
     candidates = await masters_for(session, service_id)
     if master_id:
         candidates = [m for m in candidates if m.id == master_id]
@@ -168,8 +180,6 @@ async def create_booking(session: AsyncSession, *, user_id: int, name: str, phon
         await session.execute(update(Master).where(Master.id == m.id).values(lock_ver=Master.lock_ver + 1))
         if starts_at not in await slots_for(session, m, service, day, now, old.id if old else None):
             continue
-        if old:
-            old.status, old.cancelled_by = BookingStatus.CANCELLED, "client"
         b = Booking(
             user_id=user_id, client_name=name, phone=phone, master_id=m.id, service_id=service.id,
             starts_at=starts_at, ends_at=starts_at + timedelta(minutes=service.minutes),
@@ -196,8 +206,15 @@ async def _own_cancellable(session, booking_id: int, user_id: int, now: datetime
 
 
 async def cancel_by_client(session, booking_id: int, user_id: int, now: datetime | None = None) -> Booking:
-    b = await _own_cancellable(session, booking_id, user_id, now or utcnow())
-    b.status, b.cancelled_by = BookingStatus.CANCELLED, "client"
+    now = now or utcnow()
+    b = await _own_cancellable(session, booking_id, user_id, now)
+    result = await session.execute(update(Booking).where(
+        Booking.id == booking_id, Booking.user_id == user_id, Booking.status == BookingStatus.ACTIVE,
+        Booking.starts_at > now, Booking.starts_at >= now + timedelta(hours=settings.cancel_hours),
+    ).values(status=BookingStatus.CANCELLED, cancelled_by="client"))
+    if result.rowcount != 1:
+        await session.rollback()
+        raise BookingError("Эта запись уже неактивна.")
     await session.commit()
     return b
 
@@ -206,7 +223,12 @@ async def cancel_by_admin(session, booking_id: int) -> Booking:
     b = await session.get(Booking, booking_id)
     if b is None or b.status != BookingStatus.ACTIVE:
         raise BookingError("Запись уже отменена.")
-    b.status, b.cancelled_by = BookingStatus.CANCELLED, "admin"
+    result = await session.execute(update(Booking).where(
+        Booking.id == booking_id, Booking.status == BookingStatus.ACTIVE,
+    ).values(status=BookingStatus.CANCELLED, cancelled_by="admin"))
+    if result.rowcount != 1:
+        await session.rollback()
+        raise BookingError("Запись уже отменена.")
     await session.commit()
     return b
 
@@ -226,6 +248,10 @@ async def day_schedule(session, day: date) -> list[Booking]:
 
 async def toggle_day_off(session, master_id: int, day: date) -> bool:
     """Переключает выходной. Возвращает True, если день теперь выходной."""
+    locked = await session.execute(update(Master).where(Master.id == master_id).values(lock_ver=Master.lock_ver + 1))
+    if locked.rowcount != 1:
+        await session.rollback()
+        raise BookingError("Такого мастера больше нет.")
     off = await session.scalar(select(DayOff).where(DayOff.master_id == master_id, DayOff.day == day))
     if off:
         await session.delete(off)
@@ -234,6 +260,7 @@ async def toggle_day_off(session, master_id: int, day: date) -> bool:
     # Молча закрыть день с записями — клиенты придут к закрытому креслу
     n = sum(1 for b in await day_schedule(session, day) if b.master_id == master_id)
     if n:
+        await session.rollback()
         raise BookingError(f"На этот день у мастера {n} записей. Сначала отмените их.")
     session.add(DayOff(master_id=master_id, day=day))
     await session.commit()
